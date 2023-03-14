@@ -2,11 +2,12 @@
 *This project is a work in progress.*
 
 ## Project description
-This repository includes a python script to identify and map publicly accessible space based on OpenStreetMap Data.I developed it as part of Master thesis. The underlying understanding of public space is publicly accessible and usable areas that are outdoor and urban.
+This repository includes a python script to identify and map publicly accessible space based on OpenStreetMap Data. I developed it as part of Master thesis. The underlying understanding of public space is publicly accessible and usable areas that are outdoor and urban.
 
 ## Usage
 The script works with an extract of OSM data, for example downloaded from Geofabrik and cropped with a command line tool like Osmosis. Results are improved if complete ways are added, e.g. with Osmosis:
-```osmosis --read-pbf file=orig-data/austria-latest.osm.pbf --bb top=48.1999 left=16.3843 bottom=48.1931 right=16.3977 completeWays=yes --wb data/sample-data-rennweg-to-arenbergpark.osm.pbf
+```
+osmosis --read-pbf file=orig-data/austria-latest.osm.pbf --bb top=48.1999 left=16.3843 bottom=48.1931 right=16.3977 completeWays=yes --wb data/sample-data-rennweg-to-arenbergpark.osm.pbf
 ```
 Apart from the dataset in osm.pbf format, the coordinates of the bounding box have to be passed to the script.
 The result will be a GeoJSON file with Polygon objects and the attributes space_type and access.
