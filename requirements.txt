@@ -1,2 +1,5 @@
-numpy>=1.5.1
-scipy
+numpy
+esy.osm.shape == 0.2
+shapely
+pyproj
+geopandas
