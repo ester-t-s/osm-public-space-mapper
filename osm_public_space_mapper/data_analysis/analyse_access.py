@@ -286,7 +286,7 @@ def assume_and_clean_access_based_on_space_type(elements:list[OsmElement]) -> No
                                             'stadium', 'horse_riding'] #because usually linked to comsumption / fees / hours which might not be recorded in OSM
         space_types_without_access = ['allotments', 'construction', 'landfill', 'military','railway', 'flowerbed','fountain', 
                                     'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery',
-                                    'vineyard', 'harbour', 'resort', 'garages', 'stage']
+                                    'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir']
         if element.space_type in space_types_with_access:
             element.access = 'yes'
         elif element.space_type in space_types_with_restricted_access:
