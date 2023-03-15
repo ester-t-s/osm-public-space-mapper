@@ -96,14 +96,14 @@ def clean_geometries(elements:list[OsmElement]) -> None:
     transform_simple_multipolygon_to_polygon(elements)
     transform_false_polygons_to_linestrings(elements)
 
-def project_geometries(elements:list[OsmElement], target_crs:pyproj.crs.crs.CRS = pyproj.CRS.from_epsg(3035)) -> None:
-    """Iterates over list of OsmElements and projects their geometries into the given target_crs
+def project_geometries(elements:list[OsmElement], local_crs:pyproj.crs.crs.CRS) -> None:
+    """Iterates over list of OsmElements and projects their geometries into the given local_crs
 
     Args:
         elements (list[OsmElement]): list of OsmElements to iterate over
-        target_crs (pyproj.crs.crs.CRS, optional): coordinate reference system to project to. Defaults to pyproj.CRS.from_epsg(3035) for European Lambert Azimuthal Equal Area
+        local_crs (pyproj.crs.crs.CRS, optional): coordinate reference system to project to
     """
-    projector = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg(4326), target_crs, always_xy=True)
+    projector = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg(4326), local_crs, always_xy=True)
     for e in elements:
         e.geom = shapely.ops.transform(projector.transform, e.geom)
 
@@ -192,7 +192,7 @@ def drop_irrelevant_elements_based_on_tags(elements:list[OsmElement]) -> list[Os
                 'parking':set(('underground')), 
                 'leisure':set(('picnic_table')), 
                 'landuse': set(('commercial', 'retail', 'residential', 'industrial', 'education')),
-                'place':set(['neighbourhood', 'city_block', 'locality']),
+                'place':set(['neighbourhood', 'city_block', 'locality', 'quarter']),
                 'indoor':set(('yes', 'room'))}
 
         for e in elements:

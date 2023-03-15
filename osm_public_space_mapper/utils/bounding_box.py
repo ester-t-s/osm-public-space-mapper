@@ -26,13 +26,12 @@ class BoundingBox:
         self.bottom_4326 = bottom
         self.geom_4326 = make_polygon(self,self.left_4326, self.right_4326, self.top_4326, self.bottom_4326)
 
-    def project(self, target_crs:pyproj.crs.crs.CRS = pyproj.CRS.from_epsg(3035)) -> None:
-        """Projects the shapely geometry of the BoundingBox into the given target_crs and saves it in the attribute geom_projected
+    def project(self, local_crs:pyproj.crs.crs.CRS) -> None:
+        """Projects the shapely geometry of the BoundingBox into the given local_crs and saves it in the attribute geom_projected
 
         Args:
-            target_crs (pyproj.crs.crs.CRS, optional): projected coordinate reference system that should be used for the projection, should be the same for projection of OsmElements. 
-                                                        Defaults to pyproj.CRS.from_epsg(3035), Lambert Azimuthal Equal Area for Europe.
+            local_crs (pyproj.crs.crs.CRS, optional): projected coordinate reference system that should be used for the projection, should be the same for projection of OsmElements. 
         """        
-        projector = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg(4326), target_crs, always_xy=True)
+        projector = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg(4326), local_crs, always_xy=True)
         self.geom_projected = transform(projector.transform, self.geom_4326)
 

@@ -10,6 +10,7 @@ from osm_public_space_mapper.utils import helpers
 ### PARAMETERS TO SET ###
 source_filepath = "example_application/vienna-rennweg-to-arenbergpark_20230308.osm.pbf"
 bounding_box = BoundingBox(top=48.1999,left=16.3843, bottom=48.1931,right=16.3977)
+local_crs = pyproj.CRS.from_epsg(3035) #EPSG 3035 is recommended as default for European Lambert Azimuthal Equal Area, but can be adapted for a more suitable CRS
 target_filepath = "example_application/public-space-vienna-rennweg-to-arenbergpark.geojson"
 print_status = True # Should the current analysis step be printed to the terminal?
 
@@ -31,7 +32,7 @@ if print_status:
 clean_data.clean_geometries(dataset)
 if print_status:
     print('Projecting geometries')
-clean_data.project_geometries(dataset, target_crs = local_var.target_crs)
+clean_data.project_geometries(dataset, local_crs)
 if print_status:
     print('Marking buildings')
 analyse_space_type.mark_buildings(dataset)
@@ -104,7 +105,7 @@ if print_status:
 all_defined_space_lists = {'dataset':dataset, 'buildings':buildings, 'inaccessible_enclosed_areas':inaccessible_enclosed_areas_cleaned, 'traffic_areas':list(traffic_areas.geoms)}
 if print_status: 
     print('Projecting bounding box')
-bounding_box.project(target_crs = local_var.target_crs)
+bounding_box.project(local_crs)
 if print_status: 
     print('Cropping all element lists to projected bounding box')
 all_defined_space_lists_cropped = clean_data.crop_defined_space_to_bounding_box(all_defined_space_lists, bounding_box)
@@ -115,10 +116,5 @@ undefined_space_within_bbox = get_undefined_space.load(all_defined_space_lists_c
 ### EXPORTIN ###
 if print_status: 
     print('Exporting all defined space and the undefined space to GeoJSON:', target_filepath)
-export_data.save2geojson(all_defined_space_lists_cropped, undefined_space_within_bbox, target_filepath)
-
-
-
-
-
+export_data.save2geojson(all_defined_space_lists_cropped, undefined_space_within_bbox, target_filepath, local_crs)
 

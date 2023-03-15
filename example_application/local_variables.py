@@ -1,12 +1,5 @@
-import pyproj
-from osm_public_space_mapper.utils.bounding_box import BoundingBox
+# traffic area #
 
-### set variables that can / should be adapted to local application ###
-
-# target CRS for projections
-target_crs = pyproj.CRS.from_epsg(31256)
-
-# traffic area ###
 # highway_default_widths are based on minimum width from the Austrian 'Richtlinien und Vorschriften für das Straßenwesen'
 # https://www.e-genius.at/mooc/smart-cities-teil-3/woche-10-mobilitaet-und-stadt-ii/108-automobilitaet/strassenbreiten
 # dict with default highway widths of the roadway without parking/cycle lane etc. for each OSM highway type. Tuple consists of value for bi-directional and uni-directional highways in metres.
