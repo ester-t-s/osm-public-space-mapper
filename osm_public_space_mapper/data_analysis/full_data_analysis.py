@@ -1,6 +1,7 @@
 import shapely
 from shapely.geometry import LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
 import copy
+import pyproj
 
 from osm_public_space_mapper.data_analysis import load_data, clean_data, analyse_access, analyse_space_type, analyse_traffic_area, get_undefined_space, export_data
 from example_application import local_variables as local_var
