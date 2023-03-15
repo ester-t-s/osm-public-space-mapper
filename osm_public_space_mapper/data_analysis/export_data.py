@@ -13,7 +13,7 @@ def save2geojson(all_defined_space_lists:dict, undefined_space_within_bbox:Multi
         local_crs (pyproj.crs.crs.CRS, optional): local CRS that was used for preceding analsis, required for transformation back to EPSG 4326.
     """    
     def write_info_to_dict(all_defined_space_lists:dict, undefined_space_within_bbox:MultiPolygon) -> dict:
-        projector = pyproj.Transformer.from_crs(local_crs, pyproj.CRS.from_epsg(4326))
+        projector = pyproj.Transformer.from_crs(local_crs, pyproj.CRS.from_epsg(4326), always_xy=True)
         geometries, access_types, space_types, osmids, osmtags = [],[],[],[],[]
         for list_name, elements in all_defined_space_lists.items():
             if list_name == 'dataset':
