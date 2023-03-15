@@ -9,7 +9,8 @@ The script works with an extract of OSM data, for example downloaded from Geofab
 ```
 osmosis --read-pbf file=orig-data/austria-latest.osm.pbf --bb top=48.1999 left=16.3843 bottom=48.1931 right=16.3977 completeWays=yes --wb data/sample-data-rennweg-to-arenbergpark.osm.pbf
 ```
-Apart from the dataset in osm.pbf format, the coordinates of the bounding box have to be passed to the script.
+Apart from the dataset in osm.pbf format, the coordinates of the bounding box and the target filename have to be passed to the script. The target CRS and other local variables can be set in example_application/local_variables.py. The target CRS is used in clean_data.project_geometries() and bounding_box.project() and can be dropped as attribute to 
+The data analysis is brought together in osm_public_space_mapper.data_analysis.full_data_analysis and uses multiple other modules from the package and the custom classes BoundingBox and OsmElement defined in osm_public_space_mapper.utils.
 The result will be a GeoJSON file with Polygon objects and the attributes space_type and access.
 An OSM extract for a part of Vienna's third district, downloaded on March 8, 2023, is provided as sample data under OSM Licence: [OpenStreetMap](https://wiki.osmfoundation.org/wiki/Licence/Attribution_Guidelines)
 
