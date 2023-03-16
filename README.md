@@ -14,7 +14,7 @@ The data analysis is brought together in osm_public_space_mapper.data_analysis.f
 The result will be a GeoJSON file with Polygon objects (EPSG 4326) and the attributes space_type and access. If elements are left with undefined access, the space_type should be checked and access should be derived from that.
 An OSM extract for a part of Vienna's third district, downloaded on March 8, 2023, is provided as sample data under OSM Licence: [OpenStreetMap](https://wiki.osmfoundation.org/wiki/Licence/Attribution_Guidelines)
 The example_application can for example be visualized according to public accessibility as shown in this example:
-<img style="text-align:center" src="example_application/sample_visualization.png" alt="visualization of publicly accessible space in the sample area in Vienna's third district" width=50% height=50%>
+<img style="display:block" src="example_application/sample_visualization.png" alt="visualization of publicly accessible space in the sample area in Vienna's third district" width=50% height=50%>
 
 ## Limitations
 The script is not optimized for performance. An analysis for an area of around 1 km2 should be processed in around five minutes. Bigger areas take significantly longer.
