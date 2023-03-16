@@ -12,7 +12,7 @@ def mark_buildings(elements:list[OsmElement]) -> None:
         if e.is_polygon() or e.is_multipolygon():
             for tag in building_tags:
                 if e.has_tag(tag):
-                    if e.tags.get('building') != 'roof':
+                    if e.tags.get('building') != 'roof' and e.tags.get('building')!='no':
                         e.space_type = 'building'
                         break
     
