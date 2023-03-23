@@ -1,12 +1,8 @@
-import numpy as np
-import geopandas as gpd
-import pandas as pd
 import copy
-import shapely
-from shapely.geometry import LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
 from osm_public_space_mapper.utils.osm_element import OsmElement
 
-def buffer_list_of_elements(elements:list[OsmElement], buffer_size:float, cap_style:str = 'flat', join_style:str = 'mitre') -> list[OsmElement]:
+
+def buffer_list_of_elements(elements: list[OsmElement], buffer_size: float, cap_style: str = 'flat', join_style: str = 'mitre') -> list[OsmElement]:
     """Buffers the geometries of all elements in a list of OsmElements
 
     Args:
@@ -16,10 +12,10 @@ def buffer_list_of_elements(elements:list[OsmElement], buffer_size:float, cap_st
 
     Returns:
         list[OsmElement]: list of OsmElements with the new, buffered geometry as geom attribute
-    """    
+    """
     elements_buffer = []
     for e in elements:
         e_buffered = copy.deepcopy(e)
-        e_buffered.geom = e.geom.buffer(buffer_size, cap_style = cap_style, join_style = join_style)
+        e_buffered.geom = e.geom.buffer(buffer_size, cap_style=cap_style, join_style=join_style)
         elements_buffer.append(e_buffered)
     return elements_buffer
