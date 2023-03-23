@@ -3,6 +3,7 @@
 
 ## Project description
 This repository includes a python script to identify and map publicly accessible space based on OpenStreetMap Data. I developed it as part of Master thesis. The underlying understanding of public space is publicly accessible and usable areas that are outdoor and urban.
+My talk at FOSSGIS 2023 can be viewed [here](https://pretalx.com/fossgis2023/talk/Y77U8A/) (in German)
 
 ## Usage
 The script works with an extract of OSM data, for example downloaded from Geofabrik and cropped with a command line tool like Osmosis. Results on the edges are improved if complete ways are added, e.g. with Osmosis:
