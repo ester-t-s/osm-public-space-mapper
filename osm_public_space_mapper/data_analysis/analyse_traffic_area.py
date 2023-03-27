@@ -213,25 +213,6 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         cropper_geometries = [e.geom for e in pedestrian_ways_buffered] + [e.geom for e in buildings_buffered] + [e.geom for e in platforms] + inaccessible_enclosed_areas
         return cropper_geometries
 
-    def crop_traffic_areas(traffic_area_elements: list[OsmElement], cropper_geometries: list[Polygon | MultiPolygon]) -> list[OsmElement]:
-        """Iterates over traffic area elements and crops them when intersecting with a cropper geometry
-
-        Args:
-            traffic_area_elements (list[OsmElement]): traffic area elements to iterate over
-            cropper_geometries (list[Polygon | MultiPolygon]): cropper geometries
-
-        Returns:
-            list[OsmElement]: list of traffic areas as OsmElements with new, cropped geom attribute
-        """
-        traffic_areas_cropped = []
-        for traffic_area in traffic_area_elements:
-            traffic_area_cropped = copy.deepcopy(traffic_area)
-            for cropper in cropper_geometries:
-                if traffic_area_cropped.geom.intersects(cropper):
-                    traffic_area_cropped.geom = traffic_area_cropped.geom.difference(cropper)
-            traffic_areas_cropped.append(traffic_area_cropped)
-        return traffic_areas_cropped
-
     def smooth_traffic_areas(traffic_areas_cropped):
         smooth_traffic_areas = traffic_areas_cropped.buffer(1, join_style='mitre').buffer(-1, join_style='mitre').buffer(0.5, join_style='round').buffer(-0.5, join_style='round')
         return smooth_traffic_areas
