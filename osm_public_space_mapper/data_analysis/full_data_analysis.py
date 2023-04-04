@@ -95,9 +95,6 @@ if print_status:
     print('Dropping linestrings from dataset')
 dataset = clean_data.drop_linestrings(dataset)
 if print_status:
-    print('Dropping elements within inaccessible enclosed areas - be patient, that may take a while.')
-dataset = clean_data.drop_elements_within_inaccessible_enclosed_areas(dataset, inaccessible_enclosed_areas_cleaned)
-if print_status:
     print('Cropping overlapping polygons - be patient, that may take a while.')
 clean_data.crop_overlapping_polygons(dataset)
 
