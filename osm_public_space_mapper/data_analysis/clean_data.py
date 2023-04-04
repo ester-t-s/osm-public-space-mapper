@@ -244,7 +244,7 @@ def drop_elements_within_inaccessible_enclosed_areas(elements: list[OsmElement],
     return [e for e in elements if not e.ignore]
 
 
-def drop_traffic_elements(elements: list[OsmElement]) -> list[OsmElement]:
+def drop_road_rail_walking(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if e.space_type not in ['road', 'rail', 'walking area']]
 
 

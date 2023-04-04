@@ -90,7 +90,7 @@ if print_status:
 dataset = clean_data.drop_points(dataset)
 if print_status:
     print('Dropping all traffic areas from dataset')
-dataset = clean_data.drop_traffic_elements(dataset)
+dataset = clean_data.drop_road_rail_walking(dataset)
 if print_status:
     print('Dropping linestrings from dataset')
 dataset = clean_data.drop_linestrings(dataset)
