@@ -107,7 +107,7 @@ if print_status:
 dataset = clean_data.drop_elements_with_undefined_space_type(dataset)
 if print_status:
     print('Setting missing access attribute based on space type')
-analyse_access.assume_and_clean_access_based_on_space_type(dataset)
+analyse_access.assume_access_based_on_space_type(dataset)
 
 
 # PREPARING FOR EXPORT #

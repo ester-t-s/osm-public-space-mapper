@@ -271,39 +271,31 @@ def clear_temporary_attributes_and_drop_linestring_barriers(elements: list[OsmEl
     return [e for e in elements if not e.ignore]
 
 
-def assume_and_clean_access_based_on_space_type(elements: list[OsmElement]) -> None:
+def assume_access_based_on_space_type(elements: list[OsmElement]) -> None:
     """sets the access of OsmElements based on a give space_type if access is not set yet and space_type is given.
         also sets access to no for all elements with space_type parking, even if it is set differently already
 
     Args:
         elements (list[OsmElement]): list of OsmElements
     """
-    def assume_access_based_on_space_type(element: OsmElement) -> None:
-        space_types_with_access = ['public transport stop', 'park', 'playground', 'dog_park', 'place', 'fitness_station',
-                                   'square', 'track', 'brownfield', 'bus_station', 'forest', 'sand', 'garden', 'heath',
-                                   'greenhouse_horticulture', 'meadow', 'nature_reserve', 'recreation_ground', 'scree',
-                                   'scrub', 'village_green', 'wood', 'cemetery', 'grass', 'pitch', 'beach', 'bridge',
-                                   'common',  'island', 'marina', 'pier', 'water_park', 'religious', 'shelter', 'grassland',
-                                   'greenfield'
-                                   ]
-        space_types_with_restricted_access = ['outdoor_seating', 'sports_centre', 'swimming_pool', 'biergarten',
-                                              'miniature_golf', 'stadium', 'horse_riding'
-                                              ]  # because usually linked to comsumption / fees / hours which might not be recorded in OSM
-        space_types_without_access = ['allotments', 'construction', 'landfill', 'military', 'railway', 'flowerbed', 'fountain',
-                                      'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery',
-                                      'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir'
-                                      ]
+    space_types_with_access = ['public transport stop', 'park', 'playground', 'dog_park', 'place', 'fitness_station',
+                               'square', 'track', 'brownfield', 'bus_station', 'forest', 'sand', 'garden', 'heath',
+                               'greenhouse_horticulture', 'meadow', 'nature_reserve', 'recreation_ground', 'scree',
+                               'scrub', 'village_green', 'wood', 'cemetery', 'grass', 'pitch', 'beach', 'bridge',
+                               'common',  'island', 'marina', 'pier', 'water_park', 'religious', 'shelter', 'grassland',
+                               'greenfield'
+                               ]
+    space_types_with_restricted_access = ['outdoor_seating', 'sports_centre', 'swimming_pool', 'biergarten',
+                                          'miniature_golf', 'stadium', 'horse_riding'
+                                          ]  # because usually linked to comsumption / fees / hours which might not be recorded in OSM
+    space_types_without_access = ['allotments', 'construction', 'landfill', 'military', 'railway', 'flowerbed', 'fountain',
+                                  'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery',
+                                  'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir'
+                                  ]
+    for element in [e for e in elements if e.access is None and e.space_type is not None]:
         if element.space_type in space_types_with_access:
             element.access = 'yes'
         elif element.space_type in space_types_with_restricted_access:
             element.access = 'restricted'
         elif element.space_type in space_types_without_access:
             element.access = 'no'
-
-    def set_all_parking_to_no_access(elements: list[OsmElement]) -> None:
-        for e in [e for e in elements if e.space_type == 'parking']:
-            e.access = ('no', 'overwrite_yes')
-
-    for element in [e for e in elements if e.access is None and e.space_type is not None]:
-        assume_access_based_on_space_type(element)
-    set_all_parking_to_no_access(elements)
