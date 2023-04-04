@@ -208,15 +208,15 @@ def get_road_and_rail_as_polygons(elements: list[OsmElement],
             list[OsmElement]: list of only railways as OsmElements with buffered geom attribute
         """
         rails_polygons = []
-        for e in [e for e in elements if e.is_linestring() and e.has_tag('railway')]:
+        for e in [e for e in elements if e.space_type == 'rail']:
             if e.tags.get('railway') == 'tram':
                 e.width = tram_gauge + tram_buffer
             elif e.tags.get('railway') == 'rail':  # ignore subway because assume it's underground
                 e.width = train_gauge + train_buffer
-            if e.tags.get('railway') in ['tram', 'rail']:
+            if e.is_linestring():
                 rails_polygons.append(buffer_osm_element(e))
-            if not e.tags.get('railway') == 'platform':
-                e.space_type = 'traffic area'
+            elif e.is_multipolygon() or e.is_polygon():
+                rails_polygons.append(e)
         return rails_polygons
 
     def get_road_and_rail(elements: list[OsmElement]) -> list[OsmElement]:
