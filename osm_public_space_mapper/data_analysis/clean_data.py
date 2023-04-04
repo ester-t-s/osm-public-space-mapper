@@ -322,7 +322,7 @@ def drop_linestrings(elements: list[OsmElement]) -> list[OsmElement]:
 
     Notes:
         Most linestrings apart from barriers and highways are not relevant for the analysis and have to be polygonized before they can be visualized
-        For now, all linestrings are dropped (highways are saved as polygons separately)
+        For now, all linestrings are dropped (roads, rail and paths are saved as polygons separately)
     """
     return [e for e in elements if not e.is_linestring()]
 
