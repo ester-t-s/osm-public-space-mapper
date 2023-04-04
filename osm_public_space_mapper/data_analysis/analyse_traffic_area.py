@@ -40,7 +40,7 @@ def set_traffic_space_type(elements: list[OsmElement]):
             return False
 
     def is_rail(element: OsmElement):
-        return element.tags.get('railway') in ['tram', 'rail']
+        return any([element.tags.get('railway') in ['tram', 'rail'], element.tags.get('landuse') == 'railway'])
 
     for e in elements:
         if is_pedestrian_way(e):
