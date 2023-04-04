@@ -73,6 +73,9 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         element_buffered.geom = element.geom.buffer(buffer_size, cap_style='flat')
         return element_buffered
 
+    def intersects_with_inaccessible_enclosed_area(element: OsmElement) -> bool:
+        return element.access_derived_from == 'inaccessible enclosed area'
+
     def polygonize_highways(elements: list[OsmElement], highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> list[OsmElement]:
         """iterates over list of OsmElements and buffers highways if LineString and thus transforms them to Polygons based on given or estimated width and sets processed elements in given list to ignore
 
@@ -189,7 +192,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
             return element.tags.get('highway') in irrelevant_highway_tag_values
 
         highways_polygons = []
-        for e in [e for e in elements if e.has_tag('highway')]:
+        for e in [e for e in elements if e.space_type == 'road' and not intersects_with_inaccessible_enclosed_area(e)]:
             if not is_irrelevant_highway(e):
                 if e.is_linestring():
                     set_road_width(e, highway_default_widths, cycleway_default_widths)
@@ -212,7 +215,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
             list[OsmElement]: list of only railways as OsmElements with buffered geom attribute
         """
         rails_polygons = []
-        for e in [e for e in elements if e.space_type == 'rail']:
+        for e in [e for e in elements if e.space_type == 'rail' and not intersects_with_inaccessible_enclosed_area(e)]:
             if e.tags.get('railway') == 'tram':
                 e.width = tram_gauge + tram_buffer
             elif e.tags.get('railway') == 'rail':  # ignore subway because assume it's underground
@@ -237,8 +240,10 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         Returns:
             list[Polygon|MultiPolygon]: list of polygon or multipolygon geomtries instead of OsmElements
         """
-        pedestrian_linestrings_buffered = buffer_list_of_elements([e for e in elements if e.space_type == 'walking area' and e.is_linestring()], buffer_size=pedestrian_way_default_width/2, cap_style='flat')
-        pedestrian_polygons = pedestrian_linestrings_buffered + [e for e in elements if e.space_type == 'walking area' and (e.is_multipolygon() or e.is_polygon())]
+        pedestrian_linestrings_buffered = buffer_list_of_elements([e for e in elements if e.space_type == 'walking area' and e.is_linestring() and not e.access_derived_from == 'inaccessible enclosed area'],
+                                                                  buffer_size=pedestrian_way_default_width/2, cap_style='flat')
+        pedestrian_polygons = (pedestrian_linestrings_buffered +
+                               [e for e in elements if e.space_type == 'walking area' and (e.is_multipolygon() or e.is_polygon()) and not e.access_derived_from == 'inaccessible enclosed area'])
         buildings_buffered = buffer_list_of_elements(buildings, buffer_size=non_traffic_space_around_buildings_default_width, join_style='mitre')
         platform_polygons = [e for e in elements if e.space_type == 'public transport stop']
         cropper_geometries = [e.geom for e in pedestrian_polygons] + [e.geom for e in buildings_buffered] + [e.geom for e in platform_polygons] + inaccessible_enclosed_areas
