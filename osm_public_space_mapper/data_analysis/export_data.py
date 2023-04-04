@@ -46,7 +46,7 @@ def save2geojson(all_defined_space_lists: dict,
                     space_types.append('inaccessible enclosed area')
                     osmids.append(None)
                     osmtags.append(None)
-            elif list_name == 'traffic_areas':
+            elif list_name == 'road_and_rail':
                 for e in elements:
                     geometries.append(shapely.ops.transform(projector.transform, e))
                     access_types.append('no')

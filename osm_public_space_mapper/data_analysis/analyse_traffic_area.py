@@ -55,7 +55,7 @@ def set_traffic_space_type(elements: list[OsmElement]):
             e.space_type = 'road'
 
 
-def get_traffic_areas_as_polygons(elements: list[OsmElement],
+def get_road_and_rail_as_polygons(elements: list[OsmElement],
                                   inaccessible_enclosed_areas: list[Polygon | MultiPolygon],
                                   buildings: list[OsmElement],
                                   highway_default_widths: dict[str, tuple[float, float]] = None,
@@ -219,7 +219,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                 e.space_type = 'traffic area'
         return rails_polygons
 
-    def get_traffic_areas(elements: list[OsmElement]) -> list[OsmElement]:
+    def get_road_and_rail(elements: list[OsmElement]) -> list[OsmElement]:
         return polygonize_highways(elements, highway_default_widths, cycleway_default_widths) + polygonize_railways(elements, tram_gauge, tram_buffer, train_gauge, train_buffer)
 
     def get_cropper_geometries(elements: list[OsmElement], inaccessible_enclosed_areas: list[Polygon | MultiPolygon], buildings: list[OsmElement]) -> list[Polygon | MultiPolygon]:
@@ -240,14 +240,14 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         cropper_geometries = [e.geom for e in pedestrian_polygons] + [e.geom for e in buildings_buffered] + [e.geom for e in platform_polygons] + inaccessible_enclosed_areas
         return cropper_geometries
 
-    def smooth_traffic_areas(traffic_areas_cropped):
+    def smooth_road_and_rail(road_and_rail_cropped):
         first_buffer_size = pedestrian_way_default_width/2+0.01  # buffer with half width of buffered pedestrian way plus a little more to close crossings that were cut out during cropping
-        smooth_traffic_areas = traffic_areas_cropped.buffer(first_buffer_size, join_style='mitre').buffer(-first_buffer_size, join_style='mitre').buffer(0.5, join_style='round').buffer(-0.5, join_style='round')
-        return smooth_traffic_areas
+        smooth_road_and_rail = road_and_rail_cropped.buffer(first_buffer_size, join_style='mitre').buffer(-first_buffer_size, join_style='mitre').buffer(0.5, join_style='round').buffer(-0.5, join_style='round')
+        return smooth_road_and_rail
 
-    traffic_areas = get_traffic_areas(elements)
+    road_and_rail = get_road_and_rail(elements)
     cropper_geometries = get_cropper_geometries(elements, inaccessible_enclosed_areas, buildings)
     cropper_geometries_union = shapely.ops.unary_union(cropper_geometries).buffer(0.3).buffer(-0.3)
-    traffic_areas_union = shapely.ops.unary_union([e.geom for e in traffic_areas])
-    traffic_areas_cropped = traffic_areas_union.difference(cropper_geometries_union)
-    return smooth_traffic_areas(traffic_areas_cropped)
+    road_and_rail_union = shapely.ops.unary_union([e.geom for e in road_and_rail])
+    road_and_rail_cropped = road_and_rail_union.difference(cropper_geometries_union)
+    return smooth_road_and_rail(road_and_rail_cropped)
