@@ -80,6 +80,14 @@ class OsmElement:
                 self.__access = access_type
     access = property(__get_access, __set_access)
 
+    def __get_access_derived_from(self) -> str:
+        return self.__access_derived_from
+
+    def __set_access_derived_from(self, source: str):
+        if self.__access_derived_from is None:
+            self.__access_derived_from = source
+    access_derived_from = property(__get_access_derived_from, __set_access_derived_from)
+
     def __get_ignore(self) -> bool:
         return self.__ignore
 

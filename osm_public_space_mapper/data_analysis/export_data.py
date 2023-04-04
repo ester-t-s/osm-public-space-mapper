@@ -19,7 +19,7 @@ def save2geojson(all_defined_space_lists: dict,
     """
     def write_info_to_dict(all_defined_space_lists: dict, undefined_space_within_bbox: MultiPolygon) -> dict:
         projector = pyproj.Transformer.from_crs(local_crs, pyproj.CRS.from_epsg(4326), always_xy=True)
-        geometries, access_types, space_types, osmids, osmtags = [], [], [], [], []
+        geometries, access_types, space_types, access_source, osmids, osmtags = [], [], [], [], [], []
         for list_name, elements in all_defined_space_lists.items():
             if list_name == 'dataset':
                 for e in elements:
@@ -30,6 +30,7 @@ def save2geojson(all_defined_space_lists: dict,
                         else:
                             access_types.append(e.access)
                         space_types.append(e.space_type)
+                        access_source.append(e.access_derived_from)
                         osmids.append(e.id)
                         osmtags.append(e.tags)
             elif list_name == 'buildings':
@@ -37,6 +38,7 @@ def save2geojson(all_defined_space_lists: dict,
                     geometries.append(shapely.ops.transform(projector.transform, e.geom))
                     access_types.append('no')
                     space_types.append('building')
+                    access_source.append('space type')
                     osmids.append(e.id)
                     osmtags.append(e.tags)
             elif list_name == 'inaccessible_enclosed_areas':
@@ -44,6 +46,7 @@ def save2geojson(all_defined_space_lists: dict,
                     geometries.append(shapely.ops.transform(projector.transform, e))
                     access_types.append('no')
                     space_types.append('inaccessible enclosed area')
+                    access_source.append('space type')
                     osmids.append(None)
                     osmtags.append(None)
             elif list_name == 'road_and_rail':
@@ -51,14 +54,22 @@ def save2geojson(all_defined_space_lists: dict,
                     geometries.append(shapely.ops.transform(projector.transform, e))
                     access_types.append('no')
                     space_types.append('traffic area')
+                    access_source.append('space type')
                     osmids.append(None)
                     osmtags.append(None)
         geometries.append(shapely.ops.transform(projector.transform, undefined_space_within_bbox))
         access_types.append('yes')
         space_types.append('undefined space')
+        access_source.append('space type')
         osmids.append(None)
         osmtags.append(None)
-        data = {'geometry': geometries, 'access': access_types, 'space_type': space_types, 'osmid': osmids, 'tags': osmtags}
+        data = {'geometry': geometries,
+                'access': access_types,
+                'space_type': space_types,
+                'access_source': access_source,
+                'osmid': osmids,
+                'tags': osmtags
+                }
         return data
     data = write_info_to_dict(all_defined_space_lists, undefined_space_within_bbox)
     gdf = gpd.GeoDataFrame(data)

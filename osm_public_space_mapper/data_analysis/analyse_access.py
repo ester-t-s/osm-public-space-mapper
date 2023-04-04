@@ -18,20 +18,24 @@ def interprete_tags(elements: list[OsmElement]) -> None:
         if any([e.has_tag('access'), e.has_tag('foot'), e.has_tag('parking_space')]):
             if e.tags.get('access') in access_tag_values_no or e.tags.get('foot') in access_tag_values_no or e.tags.get('parking_space') in access_tag_values_no:
                 e.access = 'no'
+                e.access_derived_from = 'tags'
             elif e.tags.get('access') in access_tag_values_yes or e.tags.get('foot') in access_tag_values_yes:
                 for tag in restricted_access_tags:
                     if e.has_tag(tag):
                         if e.tags.get(tag) != 'no':
                             if e.tags.get('opening_hours') != '24/7':
                                 e.access = 'restricted'
+                                e.access_derived_from = 'tags'
                 if e.access is None:
                     e.access = 'yes'
+                    e.access_derived_from = 'tags'
         else:
             for tag in restricted_access_tags:
                 if e.has_tag(tag):
                     if e.tags.get(tag) != 'no':
                         if e.tags.get('opening_hours') != '24/7':
                             e.access = 'restricted'
+                            e.access_derived_from = 'tags'
 
 
 def interprete_barriers(elements: list[OsmElement]) -> None:
@@ -256,9 +260,11 @@ def compare_osm_elements_to_inaccessible_enclosed_areas_and_drop_intersections(e
                 if (intersection_area / enclosed_area.area) >= overlap_threshold and (intersection_area / e.geom.area) >= overlap_threshold:
                     enclosed_area_indices_to_ignore.append(idx)
                     e.access = 'no'
+                    e.access_derived_from = 'inaccessible enclosed areas'
                     break
                 elif enclosed_area_prep.contains(e.geom):
                     e.access = 'no'
+                    e.access_derived_from = 'inaccessible enclosed areas'
     enclosed_areas_cleaned = drop_enclosed_areas_to_ignore(enclosed_areas, enclosed_area_indices_to_ignore)
     return enclosed_areas_cleaned
 
@@ -295,7 +301,10 @@ def assume_access_based_on_space_type(elements: list[OsmElement]) -> None:
     for element in [e for e in elements if e.access is None and e.space_type is not None]:
         if element.space_type in space_types_with_access:
             element.access = 'yes'
+            element.access_derived_from = 'space type'
         elif element.space_type in space_types_with_restricted_access:
             element.access = 'restricted'
+            element.access_derived_from = 'space type'
         elif element.space_type in space_types_without_access:
             element.access = 'no'
+            element.access_derived_from = 'space type'
