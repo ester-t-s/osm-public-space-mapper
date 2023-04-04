@@ -67,7 +67,10 @@ if print_status:
     print('Clearing temporary attributes and dropping barriers from dataset')
 dataset = analyse_access.clear_temporary_attributes_and_drop_linestring_barriers(dataset)
 
-# GETTING TRAFFIC AREA #
+# ANALYSING TRAFFIC AREA #
+if print_status:
+    print('Setting space type attribute traffic areas')
+analyse_traffic_area.set_traffic_space_type(dataset)
 if print_status:
     print('Getting car/bicycle traffic areas as polygons - be patient, that may take a while.')
 traffic_areas = analyse_traffic_area.get_traffic_areas_as_polygons(dataset,

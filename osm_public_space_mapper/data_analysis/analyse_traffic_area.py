@@ -7,19 +7,52 @@ from osm_public_space_mapper.utils.helpers import buffer_list_of_elements
 from osm_public_space_mapper.utils.osm_element import OsmElement
 
 
-def is_crossing(element):
-    tags_with_crossing_values = set(('footway', 'highway'))
-    if element.has_tag('crossing'):
-        return True
-    for tag in tags_with_crossing_values:
-        if element.tags.get(tag) == 'crossing':
-            return True
-    return False
+def set_traffic_space_type(elements: list[OsmElement]):
 
+    def is_pedestrian_way(element: OsmElement):
 
-def is_pedestrian_way(element):
-    highway_for_pedestrians = ['footway', 'steps', 'path', 'platform', 'pedestrian', 'living_street', 'track']
-    return element.tags.get('highway') in highway_for_pedestrians and not is_crossing(element)
+        def is_crossing(element: OsmElement):
+            tags_with_crossing_values = set(('footway', 'highway'))
+            if element.has_tag('crossing'):
+                return True
+            for tag in tags_with_crossing_values:
+                if element.tags.get(tag) == 'crossing':
+                    return True
+            return False
+
+        highway_for_pedestrians = set(('footway', 'steps', 'path', 'pedestrian', 'living_street', 'track'))
+        return element.tags.get('highway') in highway_for_pedestrians and not is_crossing(element)
+
+    def is_platform_polygon(element: OsmElement):
+        tags_and_values_for_platforms = {'public_transport': 'platform', 'railway': 'platform', 'highway': 'platform', 'shelter_type': 'public_transport'}
+        is_platform_polygon = False
+        if element.is_polygon() or element.is_multipolygon():
+            for tag in tags_and_values_for_platforms:
+                if element.tags.get(tag) == tags_and_values_for_platforms[tag]:
+                    is_platform_polygon = True
+                    break
+        return is_platform_polygon
+
+    def is_parking_polygon(element: OsmElement):
+        if element.is_polygon() or element.is_multipolygon():
+            return any([e.tags.get('amenity') in ['parking', 'parking_space'], e.has_tag('parking'), e.has_tag('motorcycle_parking')])
+        else:
+            return False
+
+    def is_rail(element: OsmElement):
+        return e.tags.get('railway') in ['tram', 'rail']
+
+    for e in elements:
+        if is_pedestrian_way(e):
+            e.space_type = 'walking area'
+        elif is_platform_polygon(e):
+            e.space_type = 'public transport stop'
+        elif is_parking_polygon(e):
+            e.space_type = 'parking'
+        elif is_rail(e):
+            e.space_type = 'rail'
+        elif e.has_tag('highway'):
+            e.space_type = 'road'
 
 
 def get_traffic_areas_as_polygons(elements: list[OsmElement],
@@ -156,16 +189,9 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
 
         highways_polygons = []
         for e in [e for e in elements if e.has_tag('highway')]:
-            if is_pedestrian_way(e):
-                if not is_crossing(e):
-                    e.space_type = 'walking area'
-            elif is_irrelevant_highway(e):
-                e.space_type = 'traffic area'
-            else:
-                if e.is_linestring():
-                    set_road_width(e, highway_default_widths, cycleway_default_widths)
-                    highways_polygons.append(buffer_osm_element(e))
-                e.space_type = 'traffic area'
+            if not is_irrelevant_highway(e) and e.is_linestring():
+                set_road_width(e, highway_default_widths, cycleway_default_widths)
+                highways_polygons.append(buffer_osm_element(e))
         return highways_polygons
 
     def polygonize_railways(elements: list[OsmElement], tram_gauge: float, tram_buffer: float, train_gauge: float, train_buffer: float) -> list[OsmElement]:
@@ -207,10 +233,11 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         Returns:
             list[Polygon|MultiPolygon]: list of polygon or multipolygon geomtries instead of OsmElements
         """
-        pedestrian_ways_buffered = buffer_list_of_elements([e for e in elements if is_pedestrian_way(e)], buffer_size=pedestrian_way_default_width/2, cap_style='flat')
+        pedestrian_linestrings_buffered = buffer_list_of_elements([e for e in elements if e.space_type == 'walking area' and e.is_linestring()], buffer_size=pedestrian_way_default_width/2, cap_style='flat')
+        pedestrian_polygons = pedestrian_linestrings_buffered + [e for e in elements if e.space_type == 'walking area' and (e.is_multipolygon() or e.is_polygon())]
         buildings_buffered = buffer_list_of_elements(buildings, buffer_size=non_traffic_space_around_buildings_default_width, join_style='mitre')
-        platforms = [e for e in elements if e.tags.get('railway') == 'platform']
-        cropper_geometries = [e.geom for e in pedestrian_ways_buffered] + [e.geom for e in buildings_buffered] + [e.geom for e in platforms] + inaccessible_enclosed_areas
+        platform_polygons = [e for e in elements if e.space_type == 'public transport stop']
+        cropper_geometries = [e.geom for e in pedestrian_polygons] + [e.geom for e in buildings_buffered] + [e.geom for e in platform_polygons] + inaccessible_enclosed_areas
         return cropper_geometries
 
     def smooth_traffic_areas(traffic_areas_cropped):
