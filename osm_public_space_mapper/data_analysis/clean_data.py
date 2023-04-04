@@ -245,8 +245,7 @@ def drop_elements_within_inaccessible_enclosed_areas(elements: list[OsmElement],
 
 
 def drop_traffic_elements(elements: list[OsmElement]) -> list[OsmElement]:
-    return [e for e in elements if e.space_type != 'traffic area' and e.space_type != 'walking area']
-    # walking area should not be dropped out yet but be used for a function to buffer and deduct area from other polygons that otherwise are inaccessible, e.g. vineyard
+    return [e for e in elements if e.space_type not in ['road', 'rail', 'walking area']]
 
 
 def drop_points(elements: list[OsmElement]) -> list[OsmElement]:
