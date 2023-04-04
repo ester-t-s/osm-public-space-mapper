@@ -264,10 +264,9 @@ def compare_osm_elements_to_inaccessible_enclosed_areas_and_drop_intersections(e
 
 def clear_temporary_attributes_and_drop_linestring_barriers(elements: list[OsmElement]) -> list[OsmElement]:
     for e in elements:
-        del e.is_entrance
-        if e.is_barrier and e.is_linestring():
+        del e.is_entrance, e.is_barrier
+        if e.has_tag('barrier') and e.is_linestring():
             e.ignore = True
-        del e.is_barrier
     return [e for e in elements if not e.ignore]
 
 
