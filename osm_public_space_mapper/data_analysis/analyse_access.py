@@ -255,8 +255,7 @@ def compare_osm_elements_to_inaccessible_enclosed_areas_and_drop_intersections(e
                 intersection_area = enclosed_area.intersection(e.geom).area
                 if (intersection_area / enclosed_area.area) >= overlap_threshold and (intersection_area / e.geom.area) >= overlap_threshold:
                     enclosed_area_indices_to_ignore.append(idx)
-                    if e.access is None:
-                        e.access = 'no'
+                    e.access = 'no'
                     break
                 elif enclosed_area_prep.contains(e.geom):
                     e.access = 'no'

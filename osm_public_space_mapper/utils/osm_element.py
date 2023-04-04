@@ -24,6 +24,7 @@ class OsmElement:
         self.__space_type = None
         self.__access = None
         self.__ignore = False
+        self.__access_derived_from = None
 
     def __get_geom(self) -> ShapelyGeometry | esy.osm.shape.shape.Invalid:
         return self.__geom
@@ -63,8 +64,6 @@ class OsmElement:
     def __set_space_type(self, space_type: str):
         if self.__space_type is None:
             self.__space_type = space_type
-        elif self.__space_type == space_type:
-            pass
     space_type = property(__get_space_type, __set_space_type)
 
     def __get_access(self) -> None | str:
@@ -75,8 +74,6 @@ class OsmElement:
             access_type = attr
             if self.__access is None:
                 self.__access = access_type
-            elif self.__access == access_type:
-                pass
         elif type(attr) == tuple:
             access_type, overwrite = attr
             if overwrite == 'overwrite_yes':
