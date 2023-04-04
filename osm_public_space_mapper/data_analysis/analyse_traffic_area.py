@@ -19,7 +19,7 @@ def is_crossing(element):
 
 def is_pedestrian_way(element):
     highway_for_pedestrians = ['footway', 'steps', 'path', 'platform', 'pedestrian', 'living_street', 'track']
-    return element.tags.get('highway') in highway_for_pedestrians and not element.tags.get('footway') == 'crossing'
+    return element.tags.get('highway') in highway_for_pedestrians and not is_crossing(element)
 
 
 def get_traffic_areas_as_polygons(elements: list[OsmElement],
