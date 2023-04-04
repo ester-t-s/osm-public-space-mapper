@@ -232,18 +232,6 @@ def get_and_drop_buildings(elements: list[OsmElement]) -> tuple[list[OsmElement]
     return elements, buildings
 
 
-def drop_elements_within_inaccessible_enclosed_areas(elements: list[OsmElement], inaccessible_enclosed_areas: list[Polygon | MultiPolygon]) -> list[OsmElement]:
-    inaccessible_enclosed_areas_buffered = [area.buffer(0.1, join_style='mitre') for area in inaccessible_enclosed_areas]
-    for e in elements:
-        e_geom_prep = shapely.ops.prep(e.geom)
-        for area in inaccessible_enclosed_areas_buffered:
-            if e_geom_prep.within(area):
-                e.ignore = True
-                break
-
-    return [e for e in elements if not e.ignore]
-
-
 def drop_road_rail_walking(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if e.space_type not in ['road', 'rail', 'walking area']]
 

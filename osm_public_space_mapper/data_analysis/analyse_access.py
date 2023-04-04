@@ -258,6 +258,8 @@ def compare_osm_elements_to_inaccessible_enclosed_areas_and_drop_intersections(e
                     if e.access is None:
                         e.access = 'no'
                     break
+                elif enclosed_area_prep.contains(e.geom):
+                    e.access = 'no'
     enclosed_areas_cleaned = drop_enclosed_areas_to_ignore(enclosed_areas, enclosed_area_indices_to_ignore)
     return enclosed_areas_cleaned
 
