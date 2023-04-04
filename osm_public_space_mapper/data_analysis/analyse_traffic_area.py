@@ -214,7 +214,8 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         return cropper_geometries
 
     def smooth_traffic_areas(traffic_areas_cropped):
-        smooth_traffic_areas = traffic_areas_cropped.buffer(1, join_style='mitre').buffer(-1, join_style='mitre').buffer(0.5, join_style='round').buffer(-0.5, join_style='round')
+        first_buffer_size = pedestrian_way_default_width/2+0.01  # buffer with half width of buffered pedestrian way plus a little more to close crossings that were cut out during cropping
+        smooth_traffic_areas = traffic_areas_cropped.buffer(first_buffer_size, join_style='mitre').buffer(-first_buffer_size, join_style='mitre').buffer(0.5, join_style='round').buffer(-0.5, join_style='round')
         return smooth_traffic_areas
 
     traffic_areas = get_traffic_areas(elements)
