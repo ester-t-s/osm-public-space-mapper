@@ -34,13 +34,15 @@ def save2geojson(all_defined_space_lists: dict,
                         osmids.append(e.id)
                         osmtags.append(e.tags)
             elif list_name == 'buildings':
+                buildings_projected = []
                 for e in elements:
-                    geometries.append(shapely.ops.transform(projector.transform, e.geom))
-                    access_types.append('no')
-                    space_types.append('building')
-                    access_source.append('space type')
-                    osmids.append(e.id)
-                    osmtags.append(e.tags)
+                    buildings_projected.append(shapely.ops.transform(projector.transform, e.geom))
+                geometries.append(shapely.unary_union(buildings_projected))
+                access_types.append('no')
+                space_types.append('building')
+                access_source.append('space type')
+                osmids.append(None)
+                osmtags.append(None)
             elif list_name == 'inaccessible_enclosed_areas':
                 for e in elements:
                     geometries.append(shapely.ops.transform(projector.transform, e))
