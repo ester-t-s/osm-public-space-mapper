@@ -55,7 +55,7 @@ def set_traffic_space_type(elements: list[OsmElement]):
             e.space_type = 'road'
 
 
-def get_road_and_rail_as_polygons(elements: list[OsmElement],
+def get_traffic_areas_as_polygons(elements: list[OsmElement],
                                   inaccessible_enclosed_areas: list[Polygon | MultiPolygon],
                                   buildings: list[OsmElement],
                                   highway_default_widths: dict[str, tuple[float, float]] = None,
@@ -238,7 +238,7 @@ def get_road_and_rail_as_polygons(elements: list[OsmElement],
         buildings_buffered = buffer_list_of_elements(buildings, buffer_size=non_traffic_space_around_buildings_default_width, join_style='mitre')
         platform_polygons = [e for e in elements if e.space_type == 'public transport stop']
         cropper_geometries = [e.geom for e in pedestrian_polygons] + [e.geom for e in buildings_buffered] + [e.geom for e in platform_polygons] + inaccessible_enclosed_areas
-        return cropper_geometries
+        return cropper_geometries, pedestrian_polygons
 
     def smooth_road_and_rail(road_and_rail_cropped):
         first_buffer_size = pedestrian_way_default_width/2+0.01  # buffer with half width of buffered pedestrian way plus a little more to close crossings that were cut out during cropping
@@ -246,8 +246,8 @@ def get_road_and_rail_as_polygons(elements: list[OsmElement],
         return smooth_road_and_rail
 
     road_and_rail = get_road_and_rail(elements)
-    cropper_geometries = get_cropper_geometries(elements, inaccessible_enclosed_areas, buildings)
+    cropper_geometries, pedestrian_polygons = get_cropper_geometries(elements, inaccessible_enclosed_areas, buildings)
     cropper_geometries_union = shapely.ops.unary_union(cropper_geometries).buffer(0.3).buffer(-0.3)
     road_and_rail_union = shapely.ops.unary_union([e.geom for e in road_and_rail])
     road_and_rail_cropped = road_and_rail_union.difference(cropper_geometries_union)
-    return smooth_road_and_rail(road_and_rail_cropped)
+    return smooth_road_and_rail(road_and_rail_cropped), pedestrian_polygons

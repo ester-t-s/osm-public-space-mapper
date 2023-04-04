@@ -73,16 +73,16 @@ if print_status:
 analyse_traffic_area.set_traffic_space_type(dataset)
 if print_status:
     print('Getting car/bicycle traffic areas as polygons - be patient, that may take a while.')
-road_and_rail = analyse_traffic_area.get_road_and_rail_as_polygons(dataset,
-                                                                   inaccessible_enclosed_areas_cleaned,
-                                                                   buildings,
-                                                                   local_var.highway_default_widths,
-                                                                   local_var.cycleway_default_widths,
-                                                                   local_var.tram_gauge,
-                                                                   local_var.tram_buffer,
-                                                                   local_var.train_gauge,
-                                                                   local_var.train_buffer
-                                                                   )
+road_and_rail, pedestrian_ways = analyse_traffic_area.get_traffic_areas_as_polygons(dataset,
+                                                                                    inaccessible_enclosed_areas_cleaned,
+                                                                                    buildings,
+                                                                                    local_var.highway_default_widths,
+                                                                                    local_var.cycleway_default_widths,
+                                                                                    local_var.tram_gauge,
+                                                                                    local_var.tram_buffer,
+                                                                                    local_var.train_gauge,
+                                                                                    local_var.train_buffer
+                                                                                    )
 
 # CLEANING DATA #
 if print_status:
