@@ -73,7 +73,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         return element_buffered
 
     def polygonize_highways(elements: list[OsmElement], highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> list[OsmElement]:
-        """iterates over list of OsmElements and buffers highways and thus transforms the LineStrings to Polygons based on given or estimated width and sets processed elements in given list to ignore
+        """iterates over list of OsmElements and buffers highways if LineString and thus transforms them to Polygons based on given or estimated width and sets processed elements in given list to ignore
 
         Args:
             elements (list[OsmElement]): list of OsmElements to iterate over
@@ -189,9 +189,12 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
 
         highways_polygons = []
         for e in [e for e in elements if e.has_tag('highway')]:
-            if not is_irrelevant_highway(e) and e.is_linestring():
-                set_road_width(e, highway_default_widths, cycleway_default_widths)
-                highways_polygons.append(buffer_osm_element(e))
+            if not is_irrelevant_highway(e):
+                if e.is_linestring():
+                    set_road_width(e, highway_default_widths, cycleway_default_widths)
+                    highways_polygons.append(buffer_osm_element(e))
+                elif e.is_polygon() or e.is_multipolygon():
+                    highways_polygons.append(e)
         return highways_polygons
 
     def polygonize_railways(elements: list[OsmElement], tram_gauge: float, tram_buffer: float, train_gauge: float, train_buffer: float) -> list[OsmElement]:
