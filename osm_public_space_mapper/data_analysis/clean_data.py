@@ -243,21 +243,60 @@ def drop_points(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if not e.ignore]
 
 
-def crop_overlapping_polygons(elements: list[OsmElement]) -> None:
-    """Iterates over a list of OsmElements and crops the geometry of a polygon if it contains another polygon
+def clip_overlapping_polygons(elements: list[OsmElement],
+                              buildings: list[OsmElement],
+                              inaccessible_enclosed_areas: list[Polygon | MultiPolygon],
+                              road_and_rail: MultiPolygon,
+                              pedestrian_ways: list[Polygon | MultiPolygon]) -> None:
 
-    Args:
-        elements (list[OsmElement]): list of OsmElements to iterate over
+    def get_intersecting_elements(base_element: Polygon | MultiPolygon, check_elements: list[OsmElement]) -> list[OsmElement]:
+        intersecting_elements = []
+        base_element_prep = shapely.prepared.prep(base_element.buffer(-0.2))
+        for e in check_elements:
+            if base_element_prep.intersects(e.geom):
+                intersecting_elements.append(e)
+        return intersecting_elements
 
-    Notes:
-        Polygons are only cropped, if they fully contain another polygon.
-    """
-    for p1 in [e for e in elements if e.is_polygon() or e.is_multipolygon()]:
-        for p2 in [e for e in elements if e.is_polygon() or e.is_multipolygon()]:
-            if p1 == p2 or any(shapely.is_empty([p1.geom, p2.geom])):
-                pass
-            elif p1.geom.contains(p2.geom):
-                p1.geom = p1.geom.difference(p2.geom)
+    def clip_enclosed_areas_intersecting_with_elements(elements: list[OsmElement] = elements,
+                                                       buildings: list[OsmElement] = buildings,
+                                                       inaccessible_enclosed_areas: list[Polygon | MultiPolygon] = inaccessible_enclosed_areas,
+                                                       road_and_rail: MultiPolygon = road_and_rail,
+                                                       pedestrian_ways: list[OsmElement] = pedestrian_ways) -> list[Polygon | MultiPolygon]:
+
+        enclosed_areas_clipped = []
+        for enclosed_area in inaccessible_enclosed_areas:
+            intersecting_osm_elements = get_intersecting_elements(enclosed_area, elements)
+            intersecting_buildings = get_intersecting_elements(enclosed_area, buildings)
+            intersecting_pedestrian_ways = get_intersecting_elements(enclosed_area, pedestrian_ways)
+            intersecting_geometries = [e.geom for e in intersecting_osm_elements] + [e.geom for e in intersecting_buildings] + [e.geom for e in intersecting_pedestrian_ways] + list(road_and_rail.geoms)
+            intersecting_geometries_union = shapely.ops.unary_union(intersecting_geometries)
+            enclosed_areas_clipped.append(enclosed_area.difference(intersecting_geometries_union))
+        return enclosed_areas_clipped
+
+    def clip_osm_elements_within_osm_elements(elements: list[OsmElement] = elements) -> list[OsmElement]:
+        for p1 in elements:
+            for p2 in elements + [e for e in pedestrian_ways if e.access != 'no'] + buildings:
+                if p1 == p2:
+                    pass
+                elif p1.geom.buffer(0.2).contains(p2.geom):
+                    p1.geom = p1.geom.difference(p2.geom)
+        return elements
+
+    def clip_osm_elements_intersecting_with_ways_and_buildings(elements: list[OsmElement] = elements,
+                                                               buildings: list[OsmElement] = buildings,
+                                                               pedestrian_ways: list[OsmElement] = pedestrian_ways) -> list[OsmElement]:
+        for element in elements:
+            intersecting_buildings = get_intersecting_elements(element.geom, buildings)
+            intersecting_pedestrian_ways = get_intersecting_elements(element.geom, pedestrian_ways)
+            intersecting_geometries = [e.geom for e in intersecting_buildings] + [e.geom for e in intersecting_pedestrian_ways]
+            intersecting_geometries_union = shapely.ops.unary_union(intersecting_geometries)
+            element.geom = element.geom.difference(intersecting_geometries_union)
+        return elements
+
+    enclosed_areas_clipped = clip_enclosed_areas_intersecting_with_elements()
+    elements = clip_osm_elements_within_osm_elements()
+    elements = clip_osm_elements_intersecting_with_ways_and_buildings()
+    return elements, enclosed_areas_clipped
 
 
 def crop_defined_space_to_bounding_box(all_defined_space_lists: dict[str, list[OsmElement | ShapelyGeometry]], bbox: BoundingBox) -> dict:
@@ -279,6 +318,7 @@ def crop_defined_space_to_bounding_box(all_defined_space_lists: dict[str, list[O
                 geometry = e.geom
             else:
                 geometry = e
+                print(type(e))
             if not bbox.geom_projected.intersects(geometry):
                 pass
             elif shapely.ops.prep(bbox.geom_projected).covers(geometry):

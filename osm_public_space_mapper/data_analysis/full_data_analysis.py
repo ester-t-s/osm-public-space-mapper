@@ -61,8 +61,8 @@ if print_status:
     print('Getting inaccessible enclosed areas')
 inaccessible_enclosed_areas = analyse_access.get_inaccessible_enclosed_areas(inaccessible_barriers, buildings)
 if print_status:
-    print('Cleaning inaccessible enclosed areas and adding related access attribute to OsmElements - be patient, that may take a while.')
-inaccessible_enclosed_areas_cleaned = analyse_access.set_access_of_osm_elements_in_inaccessible_enclosed_areas(dataset, inaccessible_enclosed_areas, buildings)
+    print('Setting access attribute of OsmElements intersecting with inaccessible enclosed area')
+analyse_access.set_access_of_osm_elements_in_inaccessible_enclosed_areas(dataset, inaccessible_enclosed_areas)
 if print_status:
     print('Clearing temporary attributes and dropping barriers from dataset')
 dataset = analyse_access.clear_temporary_attributes_and_drop_linestring_barriers(dataset)
@@ -74,7 +74,7 @@ analyse_traffic_area.set_traffic_space_type(dataset)
 if print_status:
     print('Getting car/bicycle traffic areas as polygons - be patient, that may take a while.')
 road_and_rail, pedestrian_ways = analyse_traffic_area.get_traffic_areas_as_polygons(dataset,
-                                                                                    inaccessible_enclosed_areas_cleaned,
+                                                                                    inaccessible_enclosed_areas,
                                                                                     buildings,
                                                                                     local_var.highway_default_widths,
                                                                                     local_var.cycleway_default_widths,
@@ -94,9 +94,7 @@ dataset = clean_data.drop_road_rail_walking(dataset)
 if print_status:
     print('Dropping linestrings from dataset')
 dataset = clean_data.drop_linestrings(dataset)
-if print_status:
-    print('Cropping overlapping polygons - be patient, that may take a while.')
-clean_data.crop_overlapping_polygons(dataset)
+
 
 # SETTING MISSING SPACE TYPE AND GUESSING MISSING ACCESS #
 if print_status:
@@ -110,12 +108,18 @@ if print_status:
 analyse_access.assume_access_based_on_space_type(dataset)
 
 
+# CLEANING DATA #
+if print_status:
+    print('Clipping overlapping polygons - be patient, that may take a while.')
+dataset, inaccessible_enclosed_areas = clean_data.clip_overlapping_polygons(dataset, buildings, inaccessible_enclosed_areas, road_and_rail, pedestrian_ways)
+
+
 # PREPARING FOR EXPORT #
 if print_status:
     print('Combining all element lists that define space in a dictionary')
 all_defined_space_lists = {'dataset': dataset,
                            'buildings': buildings,
-                           'inaccessible_enclosed_areas': inaccessible_enclosed_areas_cleaned,
+                           'inaccessible_enclosed_areas': inaccessible_enclosed_areas,
                            'road_and_rail': list(road_and_rail.geoms)
                            }
 if print_status:
