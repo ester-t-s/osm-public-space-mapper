@@ -232,41 +232,20 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
     return inaccessible_enclosed_areas
 
 
-def compare_osm_elements_to_inaccessible_enclosed_areas_and_drop_intersections(elements: list[OsmElement], enclosed_areas: list[Polygon | MultiPolygon]) -> list[Polygon | MultiPolygon]:
-    """iterates over list of inaccessible enclosed areas and compares them to list of OsmElements based on intersecting area and drops the inaccessible enclosed area if it is an OsmElement with access
+def set_access_of_osm_elements_in_inaccessible_enclosed_areas(elements: list[OsmElement], enclosed_areas: list[Polygon | MultiPolygon]) -> None:
+    """iterates over list of inaccessible enclosed areas and list of OsmElements and sets access = no on OsmElements intersecting with inaccessible enclosed area
 
     Args:
         elements (list[OsmElement]): list of OsmElements
         enclosed_areas (list[Polygon | MultiPolygon]): list of geometries of inaccessible enclosed areas
-
-    Returns:
-        list[Polygon|MultiPolygon]: filtered list of geometries of inaccessible enclosed areas
     """
 
-    def drop_enclosed_areas_to_ignore(enclosed_areas: list[Polygon | MultiPolygon], enclosed_area_indices_to_ignore: list[int]) -> list[Polygon | MultiPolygon]:
-        enclosed_areas_cleaned = []
-        for idx, area in enumerate(enclosed_areas):
-            if idx not in enclosed_area_indices_to_ignore:
-                enclosed_areas_cleaned.append(area)
-        return enclosed_areas_cleaned
-
-    overlap_threshold = 0.95
-    enclosed_area_indices_to_ignore = []
-    for idx, enclosed_area in enumerate(enclosed_areas):
-        enclosed_area_prep = shapely.prepared.prep(enclosed_area)
-        for e in [e for e in elements if e.is_polygon() or e.is_multipolygon()]:
+    for enclosed_area in enclosed_areas:
+        enclosed_area_prep = shapely.prepared.prep(enclosed_area.buffer(-0.2))
+        for e in elements:
             if enclosed_area_prep.intersects(e.geom):
-                intersection_area = enclosed_area.intersection(e.geom).area
-                if (intersection_area / enclosed_area.area) >= overlap_threshold and (intersection_area / e.geom.area) >= overlap_threshold:
-                    enclosed_area_indices_to_ignore.append(idx)
-                    e.access = 'no'
-                    e.access_derived_from = 'inaccessible enclosed areas'
-                    break
-                elif enclosed_area_prep.contains(e.geom):
-                    e.access = 'no'
-                    e.access_derived_from = 'inaccessible enclosed areas'
-    enclosed_areas_cleaned = drop_enclosed_areas_to_ignore(enclosed_areas, enclosed_area_indices_to_ignore)
-    return enclosed_areas_cleaned
+                e.access = 'no'
+                e.access_derived_from = 'inaccessible enclosed area'
 
 
 def clear_temporary_attributes_and_drop_linestring_barriers(elements: list[OsmElement]) -> list[OsmElement]:

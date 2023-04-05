@@ -62,7 +62,7 @@ if print_status:
 inaccessible_enclosed_areas = analyse_access.get_inaccessible_enclosed_areas(inaccessible_barriers, buildings)
 if print_status:
     print('Cleaning inaccessible enclosed areas and adding related access attribute to OsmElements - be patient, that may take a while.')
-inaccessible_enclosed_areas_cleaned = analyse_access.compare_osm_elements_to_inaccessible_enclosed_areas_and_drop_intersections(dataset, inaccessible_enclosed_areas)
+inaccessible_enclosed_areas_cleaned = analyse_access.set_access_of_osm_elements_in_inaccessible_enclosed_areas(dataset, inaccessible_enclosed_areas, buildings)
 if print_status:
     print('Clearing temporary attributes and dropping barriers from dataset')
 dataset = analyse_access.clear_temporary_attributes_and_drop_linestring_barriers(dataset)
