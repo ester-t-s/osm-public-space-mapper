@@ -141,6 +141,7 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
             list[OsmElement]: filtered list
         """
         def is_non_groundlevel(e: OsmElement) -> bool:
+            non_groundlevel = False
             if e.has_tag('level'):
                 try:
                     list(map(float, str(e.tags.get('level')).split(';')))
@@ -148,9 +149,14 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
                     pass
                 else:
                     if 0 not in list(map(float, str(e.tags.get('level')).split(';'))):
-                        return True
-            if e.tags.get('tunnel') == 'yes':
-                return True
+                        non_groundlevel = True
+            elif e.tags.get('tunnel') == 'yes':
+                non_groundlevel = True
+            elif e.tags.get('parking') == 'underground':
+                non_groundlevel = True
+            elif e.tags.get('location') == 'underground':
+                non_groundlevel = True
+            return non_groundlevel
 
         for e in elements:
             if is_non_groundlevel(e):
