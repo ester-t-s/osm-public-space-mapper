@@ -130,13 +130,13 @@ class OsmElement:
         Returns:
             bool: boolean value if element is identified as crossing
         """
-        crossing_tags_values = {'railway': 'railway_crossing', 'highway': 'crossing', 'footway': 'crossing'}
+        crossing_tags = set('highway', 'footway', 'railway')
         crossing = False
         if self.tags.get('crossing', 'no') != 'no':
             crossing = True
         else:
-            for tag, value in crossing_tags_values.items():
-                if self.tags.get(tag) == value:
+            for tag in crossing_tags:
+                if self.tags.get(tag) == 'crossing':
                     crossing = True
                     break
         return crossing
