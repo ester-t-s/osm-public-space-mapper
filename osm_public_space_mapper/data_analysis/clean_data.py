@@ -212,11 +212,8 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
             list[OsmElement]: filtered list
         """
         relevant_amenity_tag_values = ['fountain', 'shelter', 'parking', 'parking_space', 'bus_station', 'grave_yard', 'biergarten', 'motorcycle_parking', 'public_bath']
-        irrelevant_tag_values = {'highway': set(('street_lamp', 'traffic_signals')),
-                                 'railway': set(('switch', 'signal')),
-                                 'natural': set(('tree', 'tree_row')),
+        irrelevant_tag_values = {'natural': set(('tree_row')),
                                  'parking': set(('underground')),
-                                 'leisure': set(('picnic_table')),
                                  'landuse': set(('commercial', 'retail', 'residential', 'industrial', 'education')),
                                  'place': set(['neighbourhood', 'city_block', 'locality', 'quarter']),
                                  'indoor': set(('yes', 'room'))
