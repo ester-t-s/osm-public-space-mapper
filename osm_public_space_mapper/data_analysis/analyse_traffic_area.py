@@ -8,49 +8,20 @@ from osm_public_space_mapper.utils.osm_element import OsmElement
 
 
 def set_traffic_space_type(elements: list[OsmElement]):
+    """iterates over list of OsmElements and sets space type attribute if element is traffic area (walking area, public transport stop, parking, rail, road)
 
-    def is_pedestrian_way(element: OsmElement):
-
-        def is_crossing(element: OsmElement):
-            tags_with_crossing_values = set(('footway', 'highway'))
-            if element.has_tag('crossing'):
-                return True
-            for tag in tags_with_crossing_values:
-                if element.tags.get(tag) == 'crossing':
-                    return True
-            return False
-
-        highway_for_pedestrians = set(('footway', 'steps', 'path', 'pedestrian', 'living_street', 'track'))
-        return element.tags.get('highway') in highway_for_pedestrians and not is_crossing(element)
-
-    def is_platform_polygon(element: OsmElement):
-        tags_and_values_for_platforms = {'public_transport': 'platform', 'railway': 'platform', 'highway': 'platform', 'shelter_type': 'public_transport'}
-        is_platform_polygon = False
-        if element.is_polygon() or element.is_multipolygon():
-            for tag in tags_and_values_for_platforms:
-                if element.tags.get(tag) == tags_and_values_for_platforms[tag]:
-                    is_platform_polygon = True
-                    break
-        return is_platform_polygon
-
-    def is_parking_polygon(element: OsmElement):
-        if element.is_polygon() or element.is_multipolygon():
-            return any([e.tags.get('amenity') in ['parking', 'parking_space'], e.has_tag('parking'), e.has_tag('motorcycle_parking')])
-        else:
-            return False
-
-    def is_rail(element: OsmElement):
-        return any([element.tags.get('railway') in ['tram', 'rail'], element.tags.get('landuse') == 'railway'])
-
+    Args:
+        elements (list[OsmElement]): list of OsmElements to iterate over
+    """
     for e in elements:
-        if is_pedestrian_way(e):
+        if e.is_pedestrian_way():
             e.space_type = 'walking area'
-        elif is_platform_polygon(e):
+        elif e.is_platform_polygon():
             e.space_type = 'public transport stop'
-        elif is_parking_polygon(e):
+        elif e.is_parking_polygon():
             e.space_type = 'parking'
             e.access = ('no', 'overwrite_yes')
-        elif is_rail(e):
+        elif e.is_rail():
             e.space_type = 'rail'
         elif e.has_tag('highway'):
             e.space_type = 'road'

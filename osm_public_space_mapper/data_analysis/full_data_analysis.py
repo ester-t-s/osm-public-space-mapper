@@ -65,7 +65,7 @@ if print_status:
 analyse_access.set_access_of_osm_elements_in_inaccessible_enclosed_areas(dataset, inaccessible_enclosed_areas)
 if print_status:
     print('Clearing temporary attributes and dropping barriers from dataset')
-dataset = analyse_access.clear_temporary_attributes_and_drop_linestring_barriers(dataset)
+dataset = analyse_access.drop_linestring_barriers(dataset)
 
 # ANALYSING TRAFFIC AREA #
 if print_status:

@@ -45,59 +45,6 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
         elements (list[OsmElement]): list of OsmElements to iterate over
     """
 
-    def set_barrier_attribute(elements: list[OsmElement]) -> None:
-        """Iterates over list of OsmElements and adds temporary attribute is_barrier with boolean value depending on tags.
-
-        Args:
-            elements (list[OsmElement]): list of OsmElements to iterate over
-
-        Notes:
-            Barriers, motorways and railways (not trams) are marked as barriers.
-            For all apart from landuse == railway, only LineStrings are counted because they should be set up as LineStrings.
-            If the element has a layer tag, it is not counted as barrier, because it is assumed that there is something below/above granting access through this barrier
-        """
-        for e in elements:
-            if e.has_tag('barrier') and e.is_linestring():
-                e.is_barrier = True
-            elif e.tags.get('highway') == 'motorway' and e.tags.get('layer') is None and e.is_linestring():
-                # based on assumption that there is something below / above that probably grants access if layer tag is given
-                e.is_barrier = True
-            elif e.tags.get('railway') == 'rail' and e.tags.get('layer') is None and e.is_linestring() and e.tags.get('embedded') != 'yes':
-                e.is_barrier = True
-            elif e.tags.get('landuse') == 'railway' and e.is_polygon() or e.is_multipolygon():
-                e.is_barrier = True
-            else:
-                e.is_barrier = False
-
-    def set_entrance_attribute(elements: list[OsmElement]) -> None:
-        """Iterates over list of OsmElements and adds temporary attribute is_entrance with boolean value depending on tags.
-
-        Args:
-            elements (list[OsmElement]): list of OsmElements to iterate over
-
-        Notes:
-            Elements that might grant access through a barrier count as entrances.
-            These are highways and other elements with a specific, predefined tag value like barrier=gate
-        """
-        entrance_tags_values = {'railway': ['railway_crossing'], 'crossing': 'any value apart from no', 'highway': ['crossing'], 'barrier': ['gate']}
-        for e in elements:
-            is_entrance = False
-            if e.has_tag('highway') and e.tags.get('highway') != 'motorway' and e.is_linestring():
-                is_entrance = True
-            else:
-                for tag in entrance_tags_values:
-                    if e.tags.get(tag) is not None:
-                        if entrance_tags_values[tag] == 'any value apart from no':
-                            if e.tags.get(tag) != 'no':
-                                is_entrance = True
-                                break
-                        else:
-                            for value in entrance_tags_values[tag]:
-                                if e.tags.get(tag) == value:
-                                    is_entrance = True
-                                    break
-            e.is_entrance = is_entrance
-
     def set_access_attribute_on_barriers(elements: list[OsmElement]) -> None:
 
         def set_access_attribute_on_barrier(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
@@ -183,21 +130,19 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
             elif len(intersecting_entrances) > 1:
                 set_barrier_access_attribute_with_multiple_entrances(barrier, intersecting_entrances)
 
-        for barrier in [e for e in elements if e.is_barrier]:
+        for barrier in [e for e in elements if e.is_barrier()]:
             barrier_geom_prep = shapely.prepared.prep(barrier.geom)
             intersecting_entrances = []
-            for entrance in [e for e in elements if e.is_entrance]:
+            for entrance in [e for e in elements if e.is_entrance()]:
                 if barrier_geom_prep.intersects(entrance.geom):
                     intersecting_entrances.append(entrance)
             set_access_attribute_on_barrier(barrier, intersecting_entrances)
 
-    set_barrier_attribute(elements)
-    set_entrance_attribute(elements)
     set_access_attribute_on_barriers(elements)
 
 
 def get_inaccessible_barriers(elements: list[OsmElement]) -> list[OsmElement]:
-    """returns the elements in list of OsmElements that have access = no and is_barrier = True
+    """returns the elements in list of OsmElements that have access = no and is_barrier() = True
 
     Args:
         elements (list[OsmElement]): list of OsmElements
@@ -205,7 +150,7 @@ def get_inaccessible_barriers(elements: list[OsmElement]) -> list[OsmElement]:
     Returns:
         list[OsmElement]: filtered list
     """
-    return [e for e in elements if e.access == 'no' and e.is_barrier]
+    return [e for e in elements if e.access == 'no' and e.is_barrier()]
 
 
 def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], buildings: list[OsmElement]) -> list[Polygon | MultiPolygon]:
@@ -248,9 +193,8 @@ def set_access_of_osm_elements_in_inaccessible_enclosed_areas(elements: list[Osm
                 e.access_derived_from = 'inaccessible enclosed area'
 
 
-def clear_temporary_attributes_and_drop_linestring_barriers(elements: list[OsmElement]) -> list[OsmElement]:
+def drop_linestring_barriers(elements: list[OsmElement]) -> list[OsmElement]:
     for e in elements:
-        del e.is_entrance, e.is_barrier
         if e.has_tag('barrier') and e.is_linestring():
             e.ignore = True
     return [e for e in elements if not e.ignore]
