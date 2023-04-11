@@ -246,8 +246,8 @@ def get_and_drop_buildings(elements: list[OsmElement]) -> tuple[list[OsmElement]
     Returns:
         tuple[list[OsmElement], list[OsmElement]]: given list without buildings and buildings as separate list
     """
-    buildings = [e for e in elements if e.space_type == 'building']
-    elements = [e for e in elements if e.space_type != 'building']
+    buildings = [e for e in elements if e.is_building()]
+    elements = [e for e in elements if not e.is_building()]
     return elements, buildings
 
 

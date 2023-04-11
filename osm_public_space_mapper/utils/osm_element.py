@@ -124,6 +124,21 @@ class OsmElement:
     def is_point(self) -> bool:
         return self.is_certain_geometry(Point)
 
+    def is_building(self) -> bool:
+        """identifies an element as building depending on tags and geometry
+
+        Returns:
+            bool: boolean value if element is identified as building
+        """
+        building = False
+        building_tags = ['building', 'building:part', 'building:levels']
+        if self.is_polygon() or self.is_multipolygon():
+            for tag in building_tags:
+                if self.has_tag(tag):
+                    if self.tags.get('building') != 'roof' and self.tags.get('building') != 'no':
+                        building = True
+        return building
+
     def is_crossing(self) -> bool:
         """identifies an element as crossing depending on tags
 

@@ -1,25 +1,6 @@
 from osm_public_space_mapper.utils.osm_element import OsmElement
 
 
-def mark_buildings(elements: list[OsmElement]) -> None:
-    """iterates over list of OsmElements and sets space_type to building if identified as building
-
-    Args:
-        elements (list[OsmElement]): list of OsmElements to iterate over
-    """
-    def mark_if_building(e):
-        building_tags = ['building', 'building:part', 'building:levels']
-        if e.is_polygon() or e.is_multipolygon():
-            for tag in building_tags:
-                if e.has_tag(tag):
-                    if e.tags.get('building') != 'roof' and e.tags.get('building') != 'no':
-                        e.space_type = 'building'
-                        break
-
-    for e in elements:
-        mark_if_building(e)
-
-
 def set_missing_space_types(elements: list[OsmElement]) -> None:
     """iterates over list of OsmElements and sets space_type based on tags if space_type is not set yet
 

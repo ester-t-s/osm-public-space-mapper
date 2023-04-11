@@ -41,9 +41,6 @@ if print_status:
     print('Projecting geometries')
 clean_data.project_geometries(dataset, local_crs)
 if print_status:
-    print('Marking buildings')
-analyse_space_type.mark_buildings(dataset)
-if print_status:
     print('Returning buildings as separate list and drop from dataset')
 dataset, buildings = clean_data.get_and_drop_buildings(dataset)
 if print_status:
