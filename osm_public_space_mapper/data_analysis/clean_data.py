@@ -283,7 +283,7 @@ def clip_overlapping_polygons(elements: list[OsmElement],
             intersecting_geometries = [e.geom for e in intersecting_osm_elements] + [e.geom for e in intersecting_buildings] + [e.geom for e in intersecting_pedestrian_ways] + list(road_and_rail.geoms)
             intersecting_geometries_union = shapely.ops.unary_union(intersecting_geometries)
             enclosed_areas_clipped.append(enclosed_area.difference(intersecting_geometries_union))
-        return enclosed_areas_clipped
+        return [e for e in enclosed_areas_clipped if not e.is_empty]
 
     def clip_osm_elements_within_osm_elements(elements: list[OsmElement] = elements) -> list[OsmElement]:
         for p1 in elements:
@@ -292,7 +292,7 @@ def clip_overlapping_polygons(elements: list[OsmElement],
                     pass
                 elif p1.geom.buffer(0.2).contains(p2.geom):
                     p1.geom = p1.geom.difference(p2.geom)
-        return elements
+        return [e for e in elements if not e.geom.is_empty]
 
     def clip_osm_elements_intersecting_with_ways_and_buildings(elements: list[OsmElement] = elements,
                                                                buildings: list[OsmElement] = buildings,
@@ -303,7 +303,7 @@ def clip_overlapping_polygons(elements: list[OsmElement],
             intersecting_geometries = [e.geom for e in intersecting_buildings] + [e.geom for e in intersecting_pedestrian_ways]
             intersecting_geometries_union = shapely.ops.unary_union(intersecting_geometries)
             element.geom = element.geom.difference(intersecting_geometries_union)
-        return elements
+        return [e for e in elements if not e.geom.is_empty]
 
     enclosed_areas_clipped = clip_enclosed_areas_intersecting_with_elements()
     elements = clip_osm_elements_within_osm_elements()
