@@ -325,12 +325,11 @@ def crop_defined_space_to_bounding_box(all_defined_space_lists: dict[str, list[O
             list[OsmElement|ShapelyGeometry]: list of OsmElements and/or shapely geometries with cropped geometries
         """
         elements_cropped = []
-        for idx, e in enumerate(elements):
+        for e in elements:
             if type(e) == OsmElement:
                 geometry = e.geom
             else:
                 geometry = e
-                print(type(e))
             if not bbox.geom_projected.intersects(geometry):
                 pass
             elif shapely.ops.prep(bbox.geom_projected).covers(geometry):
