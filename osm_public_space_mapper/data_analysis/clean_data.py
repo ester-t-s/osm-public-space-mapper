@@ -46,6 +46,25 @@ def drop_elements_without_tags(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if len(e.tags) > 0]
 
 
+def drop_points_apart_from_entrances(elements: list[OsmElement]) -> list[OsmElement]:
+    """drops alls points apart from entrances because they are not relevant for analysis
+
+    Args:
+        elements (list[OsmElement]): list of OsmElements to iterate over
+
+    Returns:
+        list[OsmElement]: list of OsmElements without points apart from entrances
+
+    Notes:
+        Nodes in OSM also describe areas in some cases (e.g. bicycle parking, localities), however, these points cannot be converted into areas without exact specification of the size.
+        In addition, these points are usually not directly relevant for public accessibility but describe the presence of certain amenities and thus often the quality of a space.
+    """
+    for e in elements:
+        if e.is_point() and not e.is_entrance():
+            e.ignore = True
+    return [e for e in elements if not e.ignore]
+
+
 def clean_geometries(elements: list[OsmElement]) -> None:
     """Iterates over a list of OsmElements and cleans the geometries by transforming simple multipolygons to polygons,
     transforming false polygons to linestrings and cropping overlapping polygons
@@ -234,13 +253,6 @@ def get_and_drop_buildings(elements: list[OsmElement]) -> tuple[list[OsmElement]
 
 def drop_road_rail_walking(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if e.space_type not in ['road', 'rail', 'walking area']]
-
-
-def drop_points(elements: list[OsmElement]) -> list[OsmElement]:
-    for e in elements:
-        if e.is_point():
-            e.ignore = True
-    return [e for e in elements if not e.ignore]
 
 
 def clip_overlapping_polygons(elements: list[OsmElement],

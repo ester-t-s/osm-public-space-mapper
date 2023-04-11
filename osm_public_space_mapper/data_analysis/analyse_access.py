@@ -193,9 +193,11 @@ def set_access_of_osm_elements_in_inaccessible_enclosed_areas(elements: list[Osm
                 e.access_derived_from = 'inaccessible enclosed area'
 
 
-def drop_linestring_barriers(elements: list[OsmElement]) -> list[OsmElement]:
+def drop_linestring_barriers_and_entrance_points(elements: list[OsmElement]) -> list[OsmElement]:
     for e in elements:
         if e.has_tag('barrier') and e.is_linestring():
+            e.ignore = True
+        elif e.is_entrance() and e.is_point():
             e.ignore = True
     return [e for e in elements if not e.ignore]
 

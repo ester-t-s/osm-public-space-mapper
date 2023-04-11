@@ -32,6 +32,9 @@ if print_status:
     print('Dropping elements without tags')
 dataset = clean_data.drop_elements_without_tags(dataset)
 if print_status:
+    print('Dropping all points apart from entrances')
+dataset = clean_data.drop_points_apart_from_entrances(dataset)
+if print_status:
     print('Cleaning geometries')
 clean_data.clean_geometries(dataset)
 if print_status:
@@ -65,7 +68,7 @@ if print_status:
 analyse_access.set_access_of_osm_elements_in_inaccessible_enclosed_areas(dataset, inaccessible_enclosed_areas)
 if print_status:
     print('Clearing temporary attributes and dropping barriers from dataset')
-dataset = analyse_access.drop_linestring_barriers(dataset)
+dataset = analyse_access.drop_linestring_barriers_and_entrance_points(dataset)
 
 # ANALYSING TRAFFIC AREA #
 if print_status:
@@ -85,9 +88,6 @@ road_and_rail, pedestrian_ways = analyse_traffic_area.get_traffic_areas_as_polyg
                                                                                     )
 
 # CLEANING DATA #
-if print_status:
-    print('Dropping points')
-dataset = clean_data.drop_points(dataset)
 if print_status:
     print('Dropping all traffic areas from dataset')
 dataset = clean_data.drop_road_rail_walking(dataset)
