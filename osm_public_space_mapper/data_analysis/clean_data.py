@@ -240,20 +240,6 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
     return elements
 
 
-def get_and_drop_buildings(elements: list[OsmElement]) -> tuple[list[OsmElement], list[OsmElement]]:
-    """Iterates over list of OsmElements, returns the buildings as list and the given list without buildings
-
-    Args:
-        elements (list[OsmElement]): list of OsmElements to iterate over
-
-    Returns:
-        tuple[list[OsmElement], list[OsmElement]]: given list without buildings and buildings as separate list
-    """
-    buildings = [e for e in elements if e.is_building()]
-    elements = [e for e in elements if not e.is_building()]
-    return elements, buildings
-
-
 def drop_road_rail_walking(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if e.space_type not in ['road', 'rail', 'walking area']]
 

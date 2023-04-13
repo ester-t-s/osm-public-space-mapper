@@ -1,6 +1,20 @@
 from osm_public_space_mapper.utils.osm_element import OsmElement
 
 
+def get_and_drop_buildings(elements: list[OsmElement]) -> tuple[list[OsmElement], list[OsmElement]]:
+    """Iterates over list of OsmElements, returns the buildings as list and the given list without buildings
+
+    Args:
+        elements (list[OsmElement]): list of OsmElements to iterate over
+
+    Returns:
+        tuple[list[OsmElement], list[OsmElement]]: given list without buildings and buildings as separate list
+    """
+    buildings = [e for e in elements if e.is_building()]
+    elements = [e for e in elements if not e.is_building()]
+    return elements, buildings
+
+
 def set_missing_space_types(elements: list[OsmElement]) -> None:
     """iterates over list of OsmElements and sets space_type based on tags if space_type is not set yet
 

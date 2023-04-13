@@ -43,9 +43,11 @@ clean_data.clean_geometries(dataset)
 if print_status:
     print('Projecting geometries')
 clean_data.project_geometries(dataset, local_crs)
+
+# IDENTIFY BUILDINGS #
 if print_status:
-    print('Returning buildings as separate list and drop from dataset')
-dataset, buildings = clean_data.get_and_drop_buildings(dataset)
+    print('Returning buildings as separate list and delete from dataset')
+dataset, buildings = analyse_space_type.get_and_drop_buildings(dataset)
 
 
 # ANALYSING ACCESS #
