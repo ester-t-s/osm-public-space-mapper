@@ -186,9 +186,9 @@ class OsmElement:
         barrier = False
         if self.has_tag('barrier') and self.is_linestring():
             barrier = True
-        elif self.tags.get('highway') == 'motorway' and self.tags.get('layer') is None and self.is_linestring():
+        elif self.tags.get('highway') == 'motorway' and self.is_linestring():
             barrier = True
-        elif self.tags.get('railway') == 'rail' and self.tags.get('layer') is None and self.is_linestring() and self.tags.get('embedded') != 'yes':
+        elif self.tags.get('railway') == 'rail' and self.is_linestring() and self.tags.get('embedded') != 'yes':
             barrier = True
         elif self.tags.get('landuse') == 'railway' and (self.is_polygon() or self.is_multipolygon()):
             barrier = True

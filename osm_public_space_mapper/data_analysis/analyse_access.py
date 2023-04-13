@@ -52,101 +52,96 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
     Args:
         elements (list[OsmElement]): list of OsmElements to iterate over
     """
+    def set_access_attribute_on_barrier(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
+        """sets the access attribute of a barrier based on its intersections with entrances
 
-    def set_access_attribute_on_barriers(elements: list[OsmElement]) -> None:
+        Args:
+            barrier (OsmElement): barrier that is analysed
+            intersecting_entrances (list[OsmElement]): list of entrances that intersect with the barrier
 
-        def set_access_attribute_on_barrier(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
-            """sets the access attribute of a barrier based on its intersections with entrances
+        Notes:
+            the access attribute can not be overwritten, so if it was set earlier and with a more reliable source, e.g. based on an access tag, this step will not influence the value of the access attribute
+        """
+
+        def set_barrier_access_attribute_with_single_entrance(barrier: OsmElement, intersecting_entrance: OsmElement) -> None:
+            """sets the access attribute of a barrier based on a single intersecting entrance
+
+            Args:
+                barrier (OsmElement): barrier that is analysed
+                intersecting_entrance (OsmElement): entrance that intersect with the barrier
+            """
+            if intersecting_entrance.access is None:
+                barrier.access = 'yes'
+            else:
+                barrier.access = intersecting_entrance.access
+
+        def set_barrier_access_attribute_with_multiple_entrances(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
+            """sets the access attribute of a barrier based on multiple intersecting entrances
 
             Args:
                 barrier (OsmElement): barrier that is analysed
                 intersecting_entrances (list[OsmElement]): list of entrances that intersect with the barrier
-
-            Notes:
-                the access attribute can not be overwritten, so if it was set earlier and with a more reliable source, e.g. based on an access tag, this step will not influence the value of the access attribute
             """
 
-            def set_barrier_access_attribute_with_single_entrance(barrier: OsmElement, intersecting_entrance: OsmElement) -> None:
-                """sets the access attribute of a barrier based on a single intersecting entrance
+            def clean_intersecting_entrances(intersecting_entrances: list[OsmElement]) -> list[OsmElement]:
+                """ identifies and drops intersecting entrances that intersect with another intersecting entrance with access = no
 
                 Args:
-                    barrier (OsmElement): barrier that is analysed
-                    intersecting_entrance (OsmElement): entrance that intersect with the barrier
+                    intersecting_entrances (list[OsmElement]): entrance elements that intersect with the barrier and should be checked
+
+                Returns:
+                    list[int]: filtered list of intersecting entrances with access
+
+                Notes:
+                    e.g. a path might not be tagged with access = private and thus might be interpreted as giving access to a fenced area, but path and fence cross gate with access = private tag
                 """
-                if intersecting_entrance.access is None:
-                    barrier.access = 'yes'
-                else:
-                    barrier.access = intersecting_entrance.access
+                def get_intersection_ids_to_drop(intersecting_entrances: list[OsmElement]) -> set[int]:
+                    osmids_to_drop = set()
+                    for idx, i1 in enumerate(list(intersecting_entrances)):
+                        if i1 != intersecting_entrances[-1]:
+                            for i2 in intersecting_entrances[idx+1:]:
+                                if i1.geom.intersects(i2.geom):
+                                    if i1.access == 'no' or i2.access == 'no':
+                                        osmids_to_drop.add(i1.id)
+                                        osmids_to_drop.add(i2.id)
+                    return osmids_to_drop
 
-            def set_barrier_access_attribute_with_multiple_entrances(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
-                """sets the access attribute of a barrier based on multiple intersecting entrances
+                def drop_inaccessible_intersecting_entrances(intersecting_entrances: list[OsmElement], osmids_to_drop: set[int]) -> list[OsmElement]:
+                    return [i for i in intersecting_entrances if i.id not in osmids_to_drop]
 
-                Args:
-                    barrier (OsmElement): barrier that is analysed
-                    intersecting_entrances (list[OsmElement]): list of entrances that intersect with the barrier
-                """
+                intersection_ids_to_drop = get_intersection_ids_to_drop(intersecting_entrances)
+                intersecting_entrances_cleaned = drop_inaccessible_intersecting_entrances(intersecting_entrances, intersection_ids_to_drop)
+                return intersecting_entrances_cleaned
 
-                def clean_intersecting_entrances(intersecting_entrances: list[OsmElement]) -> list[OsmElement]:
-                    """ identifies and drops intersecting entrances that intersect with another intersecting entrance with access = no
-
-                    Args:
-                        intersecting_entrances (list[OsmElement]): entrance elements that intersect with the barrier and should be checked
-
-                    Returns:
-                        list[int]: filtered list of intersecting entrances with access
-
-                    Notes:
-                        e.g. a path might not be tagged with access = private and thus might be interpreted as giving access to a fenced area, but path and fence cross gate with access = private tag
-                    """
-                    def get_intersection_ids_to_drop(intersecting_entrances: list[OsmElement]) -> set[int]:
-                        osmids_to_drop = set()
-                        for idx, i1 in enumerate(list(intersecting_entrances)):
-                            if i1 != intersecting_entrances[-1]:
-                                for i2 in intersecting_entrances[idx+1:]:
-                                    if i1.geom.intersects(i2.geom):
-                                        if i1.access == 'no' or i2.access == 'no':
-                                            osmids_to_drop.add(i1.id)
-                                            osmids_to_drop.add(i2.id)
-                        return osmids_to_drop
-
-                    def drop_inaccessible_intersecting_entrances(intersecting_entrances: list[OsmElement], osmids_to_drop: set[int]) -> list[OsmElement]:
-                        return [i for i in intersecting_entrances if i.id not in osmids_to_drop]
-
-                    intersection_ids_to_drop = get_intersection_ids_to_drop(intersecting_entrances)
-                    intersecting_entrances_cleaned = drop_inaccessible_intersecting_entrances(intersecting_entrances, intersection_ids_to_drop)
-                    return intersecting_entrances_cleaned
-
-                intersecting_entrances_cleaned = clean_intersecting_entrances(intersecting_entrances)
-                has_access_point = False
-                for i in intersecting_entrances_cleaned:
-                    if i.access == 'yes' or i.access is None:
-                        has_access_point = True
-                        break
-                    elif i.access == 'restricted':
-                        has_access_point = 'restricted'
-                if has_access_point is True:
-                    barrier.access = 'yes'
-                elif has_access_point == 'restricted':
-                    barrier.access = 'restricted'
-                else:
-                    barrier.access = 'no'
-
-            if len(intersecting_entrances) == 0:
+            intersecting_entrances_cleaned = clean_intersecting_entrances(intersecting_entrances)
+            has_access_point = False
+            for i in intersecting_entrances_cleaned:
+                if i.access == 'yes' or i.access is None:
+                    has_access_point = True
+                    break
+                elif i.access == 'restricted':
+                    has_access_point = 'restricted'
+            if has_access_point is True:
+                barrier.access = 'yes'
+            elif has_access_point == 'restricted':
+                barrier.access = 'restricted'
+            else:
                 barrier.access = 'no'
-            elif len(intersecting_entrances) == 1:
-                set_barrier_access_attribute_with_single_entrance(barrier, intersecting_entrances[0])
-            elif len(intersecting_entrances) > 1:
-                set_barrier_access_attribute_with_multiple_entrances(barrier, intersecting_entrances)
 
-        for barrier in [e for e in elements if e.is_barrier()]:
-            barrier_geom_prep = shapely.prepared.prep(barrier.geom)
-            intersecting_entrances = []
-            for entrance in [e for e in elements if e.is_entrance()]:
-                if barrier_geom_prep.intersects(entrance.geom):
-                    intersecting_entrances.append(entrance)
-            set_access_attribute_on_barrier(barrier, intersecting_entrances)
+        if len(intersecting_entrances) == 0:
+            barrier.access = 'no'
+        elif len(intersecting_entrances) == 1:
+            set_barrier_access_attribute_with_single_entrance(barrier, intersecting_entrances[0])
+        elif len(intersecting_entrances) > 1:
+            set_barrier_access_attribute_with_multiple_entrances(barrier, intersecting_entrances)
 
-    set_access_attribute_on_barriers(elements)
+    for barrier in [e for e in elements if e.is_barrier()]:
+        barrier_geom_prep = shapely.prepared.prep(barrier.geom)
+        intersecting_entrances = []
+        for entrance in [e for e in elements if e.is_entrance()]:
+            if barrier_geom_prep.intersects(entrance.geom):
+                intersecting_entrances.append(entrance)
+        set_access_attribute_on_barrier(barrier, intersecting_entrances)
 
 
 def get_inaccessible_barriers(elements: list[OsmElement]) -> list[OsmElement]:
