@@ -35,6 +35,9 @@ if print_status:
     print('Dropping all points apart from entrances')
 dataset = clean_data.drop_points_apart_from_entrances(dataset)
 if print_status:
+    print('Dropping irrelevant elements based on tags')
+dataset = clean_data.drop_irrelevant_elements_based_on_tags(dataset)
+if print_status:
     print('Cleaning geometries')
 clean_data.clean_geometries(dataset)
 if print_status:
@@ -43,9 +46,7 @@ clean_data.project_geometries(dataset, local_crs)
 if print_status:
     print('Returning buildings as separate list and drop from dataset')
 dataset, buildings = clean_data.get_and_drop_buildings(dataset)
-if print_status:
-    print('Dropping irrelevant elements based on tags')
-dataset = clean_data.drop_irrelevant_elements_based_on_tags(dataset)
+
 
 # ANALYSING ACCESS #
 if print_status:

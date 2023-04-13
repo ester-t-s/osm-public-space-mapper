@@ -233,10 +233,10 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
                 e.ignore = True
         return [e for e in elements if not e.ignore]
 
-    elements = drop_elements_non_groundlevel(elements)
-    elements = drop_elements_without_relevant_tag(elements)
-    elements = drop_elements_with_irrelevant_tag(elements)
-    elements = drop_elements_with_irrelevant_tag_value(elements)
+    elements = drop_elements_non_groundlevel([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
+    elements = drop_elements_without_relevant_tag([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
+    elements = drop_elements_with_irrelevant_tag([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
+    elements = drop_elements_with_irrelevant_tag_value([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
     return elements
 
 
