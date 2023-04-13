@@ -225,7 +225,7 @@ class OsmElement:
             bool: returns true if element is identified as parking polygon
         """
         if self.is_polygon() or self.is_multipolygon():
-            return any([self.tags.get('amenity') in ['parking', 'parking_space'], self.has_tag('parking'), self.has_tag('motorcycle_parking')])
+            return any([self.tags.get('amenity') in ['parking', 'parking_space'], self.has_tag('parking'), self.has_tag('motorcycle_parking'), self.has_tag('parking_space')])
         else:
             return False
 

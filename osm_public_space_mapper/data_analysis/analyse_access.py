@@ -10,32 +10,40 @@ def interprete_tags(elements: list[OsmElement]) -> None:
     Args:
         elements (list[OsmElement]): list of OsmElements to iterate over
     """
-    access_tag_values_yes = ['yes', 'public', 'permissive', 'bus', 'destination']
-    access_tag_values_no = ['private', 'no', 'permit', 'children', 'customers', 'key', 'military', 'permit']
+    access_tag_values_yes = ['yes', 'public', 'permissive']
+    access_tag_values_no = ['private', 'no', 'permit', 'key', 'military']
+    access_tag_values_restricted = ['children', 'customers']
     restricted_access_tags = ['fee', 'opening_hours', 'max_age', 'min_age', 'female', 'male', 'charge', 'seasonal']
 
     for e in elements:
-        if any([e.has_tag('access'), e.has_tag('foot'), e.has_tag('parking_space')]):
-            if e.tags.get('access') in access_tag_values_no or e.tags.get('foot') in access_tag_values_no or e.tags.get('parking_space') in access_tag_values_no:
+        if any([e.has_tag('access'), e.has_tag('foot')]):
+            if e.tags.get('access') in access_tag_values_no or e.tags.get('foot') in access_tag_values_no:
                 e.access = 'no'
                 e.access_derived_from = 'tags'
             elif e.tags.get('access') in access_tag_values_yes or e.tags.get('foot') in access_tag_values_yes:
                 for tag in restricted_access_tags:
-                    if e.has_tag(tag):
-                        if e.tags.get(tag) != 'no':
-                            if e.tags.get('opening_hours') != '24/7':
-                                e.access = 'restricted'
-                                e.access_derived_from = 'tags'
-                if e.access is None:
-                    e.access = 'yes'
-                    e.access_derived_from = 'tags'
-        else:
-            for tag in restricted_access_tags:
-                if e.has_tag(tag):
-                    if e.tags.get(tag) != 'no':
-                        if e.tags.get('opening_hours') != '24/7':
+                    if e.has_tag(tag) and e.tags.get(tag) != 'no':
+                        if (tag == 'opening_hours' and e.tags.get(tag) != '24/7') or tag != 'opening_hours':
                             e.access = 'restricted'
                             e.access_derived_from = 'tags'
+                if e.access is None:  # if no restricted access tag was found but access / foot tag value is in tag_values_yes list
+                    e.access = 'yes'
+                    e.access_derived_from = 'tags'
+            elif e.tags.get('access') in access_tag_values_restricted or e.tags.get('foot') in access_tag_values_restricted:
+                e.access = 'restricted'
+                e.access_derived_from = 'tags'
+            else:
+                for tag in restricted_access_tags:
+                    if e.has_tag(tag) and e.tags.get(tag) != 'no':
+                        if (tag == 'opening_hours' and e.tags.get(tag) != '24/7') or tag != 'opening_hours':
+                            e.access = 'restricted'
+                            e.access_derived_from = 'tags'
+        else:
+            for tag in restricted_access_tags:
+                if e.has_tag(tag) and e.tags.get(tag) != 'no':
+                    if (tag == 'opening_hours' and e.tags.get(tag) != '24/7') or tag != 'opening_hours':
+                        e.access = 'restricted'
+                        e.access_derived_from = 'tags'
 
 
 def interprete_barriers(elements: list[OsmElement]) -> None:
