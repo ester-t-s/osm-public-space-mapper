@@ -44,9 +44,6 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         element_buffered.geom = element.geom.buffer(buffer_size, cap_style='flat')
         return element_buffered
 
-    def intersects_with_inaccessible_enclosed_area(element: OsmElement) -> bool:
-        return element.access_derived_from == 'inaccessible enclosed area'
-
     def polygonize_highways(elements: list[OsmElement], highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> list[OsmElement]:
         """iterates over list of OsmElements and buffers highways if LineString and thus transforms them to Polygons based on given or estimated width and sets processed elements in given list to ignore
 
@@ -151,18 +148,13 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
             else:
                 element.width = estimate_road_width(element, highway_default_widths, cycleway_default_widths)
 
-        def is_irrelevant_highway(element: OsmElement) -> bool:
-            irrelevant_highway_tag_values = ['corridor', 'proposed']
-            return element.tags.get('highway') in irrelevant_highway_tag_values
-
         highways_polygons = []
-        for e in [e for e in elements if e.space_type == 'road' and not intersects_with_inaccessible_enclosed_area(e)]:
-            if not is_irrelevant_highway(e):
-                if e.is_linestring():
-                    set_road_width(e, highway_default_widths, cycleway_default_widths)
-                    highways_polygons.append(buffer_osm_element(e))
-                elif e.is_polygon() or e.is_multipolygon():
-                    highways_polygons.append(e)
+        for e in [e for e in elements if e.space_type == 'road' and not e.access_derived_from == 'inaccessible enclosed area']:
+            if e.is_linestring():
+                set_road_width(e, highway_default_widths, cycleway_default_widths)
+                highways_polygons.append(buffer_osm_element(e))
+            elif e.is_polygon() or e.is_multipolygon():
+                highways_polygons.append(e)
         return highways_polygons
 
     def polygonize_railways(elements: list[OsmElement], tram_gauge: float, tram_buffer: float, train_gauge: float, train_buffer: float) -> list[OsmElement]:
@@ -179,7 +171,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
             list[OsmElement]: list of only railways as OsmElements with buffered geom attribute
         """
         rails_polygons = []
-        for e in [e for e in elements if e.space_type == 'rail' and not intersects_with_inaccessible_enclosed_area(e)]:
+        for e in [e for e in elements if e.space_type == 'rail' and not e.access_derived_from == 'inaccessible enclosed area']:
             if e.tags.get('railway') == 'tram':
                 e.width = tram_gauge + tram_buffer
             elif e.tags.get('railway') == 'rail':  # ignore subway because assume it's underground

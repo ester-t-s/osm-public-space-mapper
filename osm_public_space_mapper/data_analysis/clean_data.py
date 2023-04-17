@@ -216,7 +216,8 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
                                  'parking': set(('underground')),
                                  'landuse': set(('commercial', 'retail', 'residential', 'industrial', 'education')),
                                  'place': set(['neighbourhood', 'city_block', 'locality', 'quarter']),
-                                 'indoor': set(('yes', 'room'))
+                                 'indoor': set(('yes', 'room')),
+                                 'highway': set(('corridor', 'proposed'))
                                  }
 
         for e in elements:
