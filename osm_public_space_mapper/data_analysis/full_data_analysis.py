@@ -82,9 +82,10 @@ road_and_rail, pedestrian_ways = analyse_traffic_area.get_traffic_areas_as_polyg
                                                                                     local_var.highway_default_widths,
                                                                                     local_var.cycleway_default_widths,
                                                                                     local_var.tram_gauge,
-                                                                                    local_var.tram_buffer,
+                                                                                    local_var.tram_additional_carriageway_width,
                                                                                     local_var.train_gauge,
-                                                                                    local_var.train_buffer
+                                                                                    local_var.train_additional_carriageway_width,
+                                                                                    local_var.pedestrian_way_default_width
                                                                                     )
 
 # CLEANING DATA #

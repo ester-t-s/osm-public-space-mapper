@@ -21,6 +21,8 @@ default_parking_width = 6.5
 # width taken from OSM Verkehrswende project https://parkraum.osm-verkehrswende.org/project-prototype-neukoelln/report/#27-fl%C3%A4chenverbrauch
 
 tram_gauge = 1.435
-tram_buffer = 0.5
+tram_additional_carriageway_width = 0.5
 train_gauge = 1.435
-train_buffer = 1.5
+train_additional_carriageway_width = 1.5
+
+pedestrian_way_default_width = 1.6
