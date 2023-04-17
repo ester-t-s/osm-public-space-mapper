@@ -56,7 +56,17 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
         Returns:
             list[OsmElement]: list of only highways as OsmElements with buffered geom attribute
         """
-        def set_road_width(element: OsmElement, highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> None:
+        def set_road_width(element: OsmElement,
+                           highway_default_widths: dict[str, tuple[float, float]] = {'footway': (1.8, 1), 'service': (4.5, 3), 'residential': (4.5, 3), 'steps': (2, 1.5),
+                                                                                     'tertiary': (4.8, 3.1), 'primary': (5.5, 3.1), 'cycleway': (2, 1.5), 'secondary': (4.8, 3.1),
+                                                                                     'path': (1.5, 1), 'motorway_link': (6.5, 3.23), 'platform': (2, 1.5), 'pedestrian': (2, 2),
+                                                                                     'motorway': (6.5, 3.25), 'living_street': (4.5, 3), 'unclassified': (4.5, 3), 'primary_link': (5.5, 3.1),
+                                                                                     'track': (3, 2.5), 'corridor': (2, 1), 'proposed': (4.8, 3.1), 'secondary_link': (4.8, 3.1),
+                                                                                     'construction': (5.5, 3.1), 'everything else': (4.8, 3.1)},
+                           cycleway_default_widths: dict[dict[str: float]] = {'cycleway': {'lane': 1.6, 'opposite': 1, 'track': 1.6, 'opposite_lane': 1.6, 'opposite_track': 1.6},
+                                                                              'cycleway:right': {'lane': 1.6, 'track': 1.6},
+                                                                              'cycleway:both': {'lane': 2*1.6, 'track': 2*1.6},
+                                                                              'cycleway:left': {'lane': 1.6, 'track': 1.6}}) -> None:
             """Sets road width of a highway element in width attribute, either taken from width tags or estimated based on default values and
 
             Args:
@@ -65,23 +75,6 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                                                                         Each dict element has a tuple consisting of the value for bi-directional and uni-directional highways. Defaults set within function.
                 cycleway_default_widths (dict[dict[str: float]]): default cyleway widths with separate values given for different tags and their values in a nested dictionary. Defaults set within function.
             """
-            def set_defaults(highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> set[dict, dict]:
-                if highway_default_widths is None:
-                    highway_default_widths = {'footway': (1.8, 1), 'service': (4.5, 3), 'residential': (4.5, 3), 'steps': (2, 1.5), 'tertiary': (4.8, 3.1), 'primary': (5.5, 3.1),
-                                              'cycleway': (2, 1.5), 'secondary': (4.8, 3.1), 'path': (1.5, 1), 'motorway_link': (6.5, 3.23), 'platform': (2, 1.5), 'pedestrian': (2, 2),
-                                              'motorway': (6.5, 3.25), 'living_street': (4.5, 3), 'unclassified': (4.5, 3), 'primary_link': (5.5, 3.1), 'track': (3, 2.5),
-                                              'corridor': (2, 1), 'proposed': (4.8, 3.1), 'secondary_link': (4.8, 3.1), 'construction': (5.5, 3.1), 'everything else': (4.8, 3.1)
-                                              }
-                if cycleway_default_widths is None:
-                    cycletrack_width, cyclelane_width = 1.6, 1.6
-                    cycleway_default_widths = {'cycleway': {'lane': cyclelane_width, 'opposite': 1, 'track': cycletrack_width, 'opposite_lane': cyclelane_width, 'opposite_track': cycletrack_width},
-                                               'cycleway:right': {'lane': cyclelane_width, 'track': cycletrack_width},
-                                               'cycleway:both': {'lane': 2*cyclelane_width, 'track': 2*cycletrack_width},
-                                               'cycleway:left': {'lane': cyclelane_width, 'track': cycletrack_width}
-                                               }
-                return highway_default_widths, cycleway_default_widths
-
-            highway_default_widths, cycleway_default_widths = set_defaults(highway_default_widths, cycleway_default_widths)
 
             def estimate_road_width(element: OsmElement, highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> float:
                 """estimates road with of an OsmElement based on default values and tags and returns the width
@@ -96,7 +89,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                     float: estimated width
                 """
 
-                def set_default_highway_width(element: OsmElement, direction: str, highway_default_widths: dict[str, tuple[float, float]]) -> float:
+                def set_base_highway_width(element: OsmElement, direction: str, highway_default_widths: dict[str, tuple[float, float]]) -> float:
                     i = 1 if direction == 'uni-directional' else 0 if direction == 'bi-directional' else None
                     if element.tags.get('highway') in highway_default_widths:
                         width = highway_default_widths[element.tags.get('highway')][i]
@@ -146,7 +139,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                     return width
 
                 direction = 'uni-directional' if e.has_tag('oneway') else 'bi-directional'
-                width = set_default_highway_width(e, direction, highway_default_widths)
+                width = set_base_highway_width(e, direction, highway_default_widths)
                 width = adapt_to_lanes(e, width, direction)
                 width = add_cycleway(e, width, cycleway_default_widths)
                 width = add_parking(e, width, local_var.highway_types_for_default_streetside_parking, local_var.default_parking_width)
