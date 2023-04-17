@@ -212,8 +212,8 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
             list[OsmElement]: filtered list
         """
         relevant_amenity_tag_values = ['fountain', 'shelter', 'parking', 'parking_space', 'bus_station', 'grave_yard', 'biergarten', 'motorcycle_parking', 'public_bath']
-        irrelevant_tag_values = {'natural': set(('tree_row')),
-                                 'parking': set(('underground')),
+        irrelevant_tag_values = {'natural': {'tree_row'},
+                                 'parking': {'underground'},
                                  'landuse': set(('commercial', 'retail', 'residential', 'industrial', 'education')),
                                  'place': set(['neighbourhood', 'city_block', 'locality', 'quarter']),
                                  'indoor': set(('yes', 'room')),
@@ -264,7 +264,18 @@ def clip_overlapping_polygons(elements: list[OsmElement],
                                                        inaccessible_enclosed_areas: list[Polygon | MultiPolygon] = inaccessible_enclosed_areas,
                                                        road_and_rail: MultiPolygon = road_and_rail,
                                                        pedestrian_ways: list[OsmElement] = pedestrian_ways) -> list[Polygon | MultiPolygon]:
+        """clips inaccessible enclosed areas to the parts, that do not intersect with a building, an OsmElement, traffic area or pedestrian ways
 
+        Args:
+            elements (list[OsmElement], optional): list of OsmElements. Defaults to elements.
+            buildings (list[OsmElement], optional): list of buildings. Defaults to buildings.
+            inaccessible_enclosed_areas (list[Polygon  |  MultiPolygon], optional): list of inaccessible enclosed areas to crop. Defaults to inaccessible_enclosed_areas.
+            road_and_rail (MultiPolygon, optional): _description_. Defaults to road_and_rail.
+            pedestrian_ways (list[OsmElement], optional): _description_. Defaults to pedestrian_ways.
+
+        Returns:
+            list[Polygon | MultiPolygon]: returns inaccessible enclosed areas without parts that intersect with something else
+        """
         enclosed_areas_clipped = []
         for enclosed_area in inaccessible_enclosed_areas:
             intersecting_osm_elements = get_intersecting_elements(enclosed_area, elements)
