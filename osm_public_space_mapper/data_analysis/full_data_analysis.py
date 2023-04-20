@@ -112,10 +112,20 @@ analyse_access.assume_access_based_on_space_type(dataset)
 if print_status:
     print('Combining all elements that define space in a list')
 all_defined_space = dataset + buildings + inaccessible_enclosed_areas + pedestrian_ways + [road_and_rail]
+
+# categorize space types
+all_defined_space = clean_data.set_space_category(all_defined_space)
+
+# tbd all fine until here
+
+# merge elements with same attributes
+all_defined_space = clean_data.merge_elements_with_identical_attributes(all_defined_space)
+
+# drop small elements
+
 if print_status:
     print('Clipping overlapping polygons - be patient, that may take a while.')
-dataset, inaccessible_enclosed_areas = clean_data.clip_overlapping_polygons(dataset, buildings, inaccessible_enclosed_areas, road_and_rail, pedestrian_ways)
-
+dataset = clean_data.crop_overlapping_polygons(all_defined_space)
 
 # PREPARING FOR EXPORT #
 
