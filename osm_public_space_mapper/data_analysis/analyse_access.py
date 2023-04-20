@@ -170,8 +170,7 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
     """
     buffer_size = 0.001
     barriers_buffered = buffer_list_of_elements(inaccessible_barriers, buffer_size, cap_style='square')
-    buildings_buffered = buffer_list_of_elements(buildings, buffer_size, cap_style='square')
-    barriers_buildings_union = shapely.ops.unary_union([e.geom for e in (barriers_buffered + buildings_buffered)])
+    barriers_buildings_union = shapely.ops.unary_union([e.geom for e in (barriers_buffered + buildings)])
     inaccessible_enclosed_areas = list()
     for polygon in barriers_buildings_union.geoms:
         if len(polygon.interiors) > 0:
@@ -181,7 +180,6 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
                                                                    access_derived_from='inaccessible enclosed areas',
                                                                    space_type='undefined space'
                                                                    ))
-    # Because of the buffering, this function leads to some weird, thin shapes. A cleaner way of processing should be implemented
     return inaccessible_enclosed_areas
 
 
