@@ -204,6 +204,8 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                                                                   buffer_size=pedestrian_way_default_width/2, cap_style='flat')
         pedestrian_polygons = (pedestrian_linestrings_buffered +
                                [e for e in elements if e.space_type == 'walking area' and (e.is_multipolygon() or e.is_polygon()) and not e.access_derived_from == 'inaccessible enclosed area'])
+        for p in pedestrian_polygons:
+            p.access = 'yes'  # if not set beforehand
         buildings_buffered = buffer_list_of_elements(buildings, buffer_size=pedestrian_way_default_width, join_style='mitre')
         platform_polygons = [e for e in elements if e.space_type == 'public transport stop']
         cropper_geometries = pedestrian_polygons + buildings_buffered + platform_polygons + inaccessible_enclosed_areas
