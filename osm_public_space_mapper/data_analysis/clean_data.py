@@ -3,9 +3,10 @@ import esy.osm.shape
 import copy
 
 import shapely
-from shapely.geometry import LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
+from shapely.geometry import LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString, GeometryCollection
 
 from osm_public_space_mapper.utils.osm_element import OsmElement
+from osm_public_space_mapper.utils.geometry_element import GeometryElement
 from osm_public_space_mapper.utils.bounding_box import BoundingBox
 
 ShapelyGeometry = LinearRing | Polygon | MultiPolygon | Point | MultiPoint | LineString | MultiLineString
@@ -245,110 +246,99 @@ def drop_road_rail_walking(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if e.space_type not in ['road', 'rail', 'walking area']]
 
 
-def clip_overlapping_polygons(elements: list[OsmElement],
-                              buildings: list[OsmElement],
-                              inaccessible_enclosed_areas: list[Polygon | MultiPolygon],
-                              road_and_rail: MultiPolygon,
-                              pedestrian_ways: list[Polygon | MultiPolygon]) -> None:
+def set_space_category(elements: list[OsmElement | GeometryElement]) -> list[OsmElement | GeometryElement]:
+    categories = {'greenspace': ['dog_park', 'flowerbed', 'grass', 'park', 'sand', 'village_green', 'garden'],
+                  'play and sports': ['playground', 'pitch', 'fitness_station'],
+                  'water': ['fountain', 'water', 'wetland'],
+                  'traffic area': ['parking', 'traffic area'],
+                  'open space': ['public transport stop', 'square'],
+                  'building': ['building'],
+                  'undefined space': ['undefined space'],
+                  'walking area': ['walking area'],
+                  'inaccessible enclosed area': ['inaccessible enclosed area']
+                  }
+    for e in elements:
+        for category, space_types in categories.items():
+            if e.space_type in space_types:
+                e.space_category = category
+        if not e.space_category:
+            print('uncategorized space type:', e.space_type)
+            e.space_category = e.space_type
+    return elements
 
-    def get_intersecting_elements(base_element: Polygon | MultiPolygon, check_elements: list[OsmElement]) -> list[OsmElement]:
-        intersecting_elements = []
-        base_element_prep = shapely.prepared.prep(base_element.buffer(-0.2))
-        for e in check_elements:
-            if base_element_prep.intersects(e.geom):
-                intersecting_elements.append(e)
-        return intersecting_elements
 
-    def clip_enclosed_areas_intersecting_with_elements(elements: list[OsmElement] = elements,
-                                                       buildings: list[OsmElement] = buildings,
-                                                       inaccessible_enclosed_areas: list[Polygon | MultiPolygon] = inaccessible_enclosed_areas,
-                                                       road_and_rail: MultiPolygon = road_and_rail,
-                                                       pedestrian_ways: list[OsmElement] = pedestrian_ways) -> list[Polygon | MultiPolygon]:
-        """clips inaccessible enclosed areas to the parts, that do not intersect with a building, an OsmElement, traffic area or pedestrian ways
+def merge_elements_with_identical_attributes(elements: list[OsmElement | GeometryElement]) -> list[OsmElement | GeometryElement]:
+    merged_elements = []
+    space_categories = set([e.space_category for e in elements])
+    access_categories = set([e.access for e in elements])
+    for sc in space_categories:
+        for ac in access_categories:
+            merged_geometry = shapely.ops.unary_union([e.geom for e in elements if e.space_category == sc and e.access == ac])
+            if not merged_geometry.is_empty:
+                merged_elements.append(GeometryElement(geometry=merged_geometry, space_category=sc, access=ac))
+    return merged_elements
+
+
+def crop_overlapping_polygons(elements: list[OsmElement | GeometryElement]) -> list[OsmElement | GeometryElement]:
+
+    def clip_category_from_elements(category_to_clip: str, categories_to_crop: list[str] | None = None, elements: list[OsmElement | GeometryElement] = elements) -> None:
+        geometry_to_clip = shapely.ops.unary_union([e.geom for e in elements if e.space_category == category_to_clip])
+        for e in elements:
+            if not categories_to_crop:  # if no category to crop is specified
+                if not e.space_category == category_to_clip:
+                    e.geom = e.geom.difference(geometry_to_clip)
+            else:
+                if e.space_category in categories_to_crop:
+                    e.geom = e.geom.difference(geometry_to_clip)
+            if type(e.geom) == GeometryCollection:
+                e.geom = MultiPolygon([g for g in list(e.geom.geoms) if (type(g) == Polygon or type(g) == MultiPolygon)])
+
+    clip_category_from_elements(category_to_clip='building')
+    clip_category_from_elements(category_to_clip='water')
+    clip_category_from_elements(category_to_clip='inaccessible enclosed area', categories_to_crop=['traffic area', 'open space', 'walking area'])
+    clip_category_from_elements(category_to_clip='walking area', categories_to_crop=['greenspace', 'play and sports'])
+    clip_category_from_elements(category_to_clip='play and sports')
+    clip_category_from_elements(category_to_clip='greenspace')
+    clip_category_from_elements(category_to_clip='traffic area', categories_to_crop=['open space', 'walking area'])
+    for e in elements:
+        if e.space_category == 'walking area':
+            e.space_category = 'open space'
+        elif e.space_category == 'inaccessible enclosed area':
+            e.space_category = 'undefined space'
+    merge_elements_with_identical_attributes(elements)
+    return elements
+
+
+def crop_defined_space_to_bounding_box(all_defined_space: list[OsmElement | GeometryElement], bbox: BoundingBox) -> list[OsmElement | GeometryElement]:
+
+    def intersects_bounding_box(element: OsmElement | GeometryElement, bbox: BoundingBox = bbox) -> bool:
+        if bbox.geom_projected.intersects(element.geom):
+            return True
+        else:
+            return False
+
+    def crop_element_to_bounding_box(element: OsmElement | GeometryElement, bbox: BoundingBox = bbox) -> OsmElement | GeometryElement:
+        """Drops element if it is outside of bounding box or crops geometry if within and outside of the bounding box
 
         Args:
-            elements (list[OsmElement], optional): list of OsmElements. Defaults to elements.
-            buildings (list[OsmElement], optional): list of buildings. Defaults to buildings.
-            inaccessible_enclosed_areas (list[Polygon  |  MultiPolygon], optional): list of inaccessible enclosed areas to crop. Defaults to inaccessible_enclosed_areas.
-            road_and_rail (MultiPolygon, optional): _description_. Defaults to road_and_rail.
-            pedestrian_ways (list[OsmElement], optional): _description_. Defaults to pedestrian_ways.
-
-        Returns:
-            list[Polygon | MultiPolygon]: returns inaccessible enclosed areas without parts that intersect with something else
-        """
-        enclosed_areas_clipped = []
-        for enclosed_area in inaccessible_enclosed_areas:
-            intersecting_osm_elements = get_intersecting_elements(enclosed_area, elements)
-            intersecting_buildings = get_intersecting_elements(enclosed_area, buildings)
-            intersecting_pedestrian_ways = get_intersecting_elements(enclosed_area, pedestrian_ways)
-            intersecting_geometries = [e.geom for e in intersecting_osm_elements] + [e.geom for e in intersecting_buildings] + [e.geom for e in intersecting_pedestrian_ways] + list(road_and_rail.geoms)
-            intersecting_geometries_union = shapely.ops.unary_union(intersecting_geometries)
-            enclosed_areas_clipped.append(enclosed_area.difference(intersecting_geometries_union))
-        return [e for e in enclosed_areas_clipped if not e.is_empty]
-
-    def clip_osm_elements_within_osm_elements(elements: list[OsmElement] = elements) -> list[OsmElement]:
-        for p1 in elements:
-            for p2 in elements + [e for e in pedestrian_ways if e.access != 'no'] + buildings:
-                if p1 == p2:
-                    pass
-                elif p1.geom.buffer(0.2).contains(p2.geom):
-                    p1.geom = p1.geom.difference(p2.geom)
-        return [e for e in elements if not e.geom.is_empty]
-
-    def clip_osm_elements_intersecting_with_ways_and_buildings(elements: list[OsmElement] = elements,
-                                                               buildings: list[OsmElement] = buildings,
-                                                               pedestrian_ways: list[OsmElement] = pedestrian_ways) -> list[OsmElement]:
-        for element in elements:
-            intersecting_buildings = get_intersecting_elements(element.geom, buildings)
-            intersecting_pedestrian_ways = get_intersecting_elements(element.geom, pedestrian_ways)
-            intersecting_geometries = [e.geom for e in intersecting_buildings] + [e.geom for e in intersecting_pedestrian_ways]
-            intersecting_geometries_union = shapely.ops.unary_union(intersecting_geometries)
-            element.geom = element.geom.difference(intersecting_geometries_union)
-        return [e for e in elements if not e.geom.is_empty]
-
-    enclosed_areas_clipped = clip_enclosed_areas_intersecting_with_elements()
-    elements = clip_osm_elements_within_osm_elements()
-    elements = clip_osm_elements_intersecting_with_ways_and_buildings()
-    return elements, enclosed_areas_clipped
-
-
-def crop_defined_space_to_bounding_box(all_defined_space_lists: dict[str, list[OsmElement | ShapelyGeometry]], bbox: BoundingBox) -> dict:
-
-    def crop_elements_list_to_bounding_box(elements: list[OsmElement | ShapelyGeometry], bbox: BoundingBox) -> list[OsmElement | ShapelyGeometry]:
-        """Iterates over list of OsmElements or shapely geometries and drops elements that are outside of bounding box
-        and crops the geometries of those elements that are within and outside of the bounding box
-
-        Args:
-            elements (list[OsmElement | ShapelyGeometry]): list of OsmElements and/or shapely geometries to iterate over
+            element (OsmElement | GeometryElement): element to crop to bounding box
             bbox (BoundingBox): BoundingBox object with the geom_projected attribute
 
         Returns:
-            list[OsmElement|ShapelyGeometry]: list of OsmElements and/or shapely geometries with cropped geometries
-        """
-        elements_cropped = []
-        for e in elements:
-            if type(e) == OsmElement:
-                geometry = e.geom
-            else:
-                geometry = e
-            if not bbox.geom_projected.intersects(geometry):
-                pass
-            elif shapely.ops.prep(bbox.geom_projected).covers(geometry):
-                elements_cropped.append(e)
-            else:
-                geometry_cropped = bbox.geom_projected.intersection(geometry)
-                e_cropped = copy.deepcopy(e)
-                if type(e) == OsmElement:
-                    e_cropped.geom = geometry_cropped
-                else:
-                    e_cropped = geometry_cropped
-                elements_cropped.append(e_cropped)
-        return elements_cropped
-    all_defined_space_lists_cropped = dict()
-    for list_name, elements in all_defined_space_lists.items():
-        elements_cropped = crop_elements_list_to_bounding_box(elements, bbox)
-        all_defined_space_lists_cropped[list_name] = elements_cropped
-    return all_defined_space_lists_cropped
+            OsmElement | GeometryElement]: list of OsmElements and/or shapely geometries with cropped geometries
+         """
+        if bbox.geom_projected.covers(element.geom):
+            return element
+        else:
+            e_cropped = copy.deepcopy(element)
+            e_cropped.geom = bbox.geom_projected.intersection(e_cropped.geom)
+            return e_cropped
+
+    all_defined_space_cropped = []
+    for element in all_defined_space:
+        if intersects_bounding_box(element):
+            all_defined_space_cropped.append(crop_element_to_bounding_box(element))
+    return all_defined_space_cropped
 
 
 def drop_linestrings(elements: list[OsmElement]) -> list[OsmElement]:
