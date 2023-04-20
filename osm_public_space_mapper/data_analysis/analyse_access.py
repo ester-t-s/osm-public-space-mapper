@@ -1,4 +1,5 @@
 import shapely
+import copy
 from shapely.geometry import Polygon, MultiPolygon
 from osm_public_space_mapper.utils.helpers import buffer_list_of_elements
 from osm_public_space_mapper.utils.osm_element import OsmElement
@@ -184,20 +185,116 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
     return inaccessible_enclosed_areas
 
 
-def set_access_of_osm_elements_in_inaccessible_enclosed_areas(elements: list[OsmElement], enclosed_areas: list[Polygon | MultiPolygon]) -> None:
-    """iterates over list of inaccessible enclosed areas and list of OsmElements and sets access = no on OsmElements intersecting with inaccessible enclosed area
+def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(elements: list[OsmElement],
+                                                                                    enclosed_areas: list[GeometryElement]) -> tuple((list[OsmElement], list[GeometryElement])):
 
-    Args:
-        elements (list[OsmElement]): list of OsmElements
-        enclosed_areas (list[Polygon | MultiPolygon]): list of geometries of inaccessible enclosed areas
-    """
+    def drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements: list[OsmElement], enclosed_areas: list[GeometryElement]) -> list[GeometryElement]:
+        """iterates over list of inaccessible enclosed areas and list of OsmElements and sets access = no on OsmElements with significant overlap with inaccessible enclosed area
 
-    for enclosed_area in enclosed_areas:
-        enclosed_area_prep = shapely.prepared.prep(enclosed_area.buffer(-0.2))
-        for e in elements:
-            if enclosed_area_prep.intersects(e.geom):
-                e.access = 'no'
-                e.access_derived_from = 'inaccessible enclosed area'
+        Args:
+            elements (list[OsmElement]): list of OsmElements
+            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+
+        Returns:
+            list[GeometryElement]: list of inaccessible enclosed areas without the ones with significant overlap with an OsmElement
+        """
+        def significant_overlap(enclosed_area: GeometryElement, element: OsmElement) -> bool:
+            overlap_threshold = 0.95
+            if enclosed_area.geom.intersects(element.geom):
+                intersection_area = enclosed_area.geom.intersection(element.geom).area
+                if (intersection_area / enclosed_area.geom.area) >= overlap_threshold and (intersection_area / element.geom.area) >= overlap_threshold:
+                    return True
+            return False
+
+        def drop_enclosed_areas_to_ignore(enclosed_areas: list[GeometryElement], enclosed_area_indices_to_ignore: list[int]) -> list[GeometryElement]:
+            enclosed_areas_cleaned = []
+            for idx, area in enumerate(enclosed_areas):
+                if idx not in enclosed_area_indices_to_ignore:
+                    enclosed_areas_cleaned.append(area)
+            return enclosed_areas_cleaned
+
+        enclosed_area_indices_to_ignore = []
+        for idx, enclosed_area in enumerate(enclosed_areas):
+            for element in elements:
+                if significant_overlap(enclosed_area, element):
+                    element.access = 'no'
+                    element.access_derived_from = 'inaccessible enclosed area'
+                    enclosed_area_indices_to_ignore.append(idx)
+
+        enclosed_areas_cleaned = drop_enclosed_areas_to_ignore(enclosed_areas, enclosed_area_indices_to_ignore)
+        return enclosed_areas_cleaned
+
+    def split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements: list[OsmElement],
+                                                                             enclosed_areas: list[GeometryElement]) -> list[OsmElement]:
+        """iterates over list of OsmElements and splits them if they intersect with inaccessible enclosed area into the accessible and the inaccessible part
+
+        Args:
+            elements (list[OsmElement]): list of OsmElements to check and split
+            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+
+        Returns:
+            list[OsmElement]: list of split up OsmElements
+
+        Notes:
+            intersection geometry is only returned if it is a Polygon or a MultiPolygon and not a LineString, Point or GeometryCollection
+            because they can not be processed later and they indicate a very small intersection that can be ignored
+        """
+        elements_split = []
+        enclosed_areas_union = shapely.ops.unary_union([e.geom for e in enclosed_areas])
+        for element in elements:
+            element_intersects = False
+            if element.is_polygon() or element.is_multipolygon():
+                if element.geom.intersects(enclosed_areas_union):
+                    if type(element.geom.intersection(enclosed_areas_union)) in [MultiPolygon, Polygon]:
+                        element_intersection = copy.deepcopy(element)
+                        element_intersection.geom = element.geom.intersection(enclosed_areas_union)
+                        element_intersection.access = 'no'
+                        element_intersection.access_derived_from = 'inaccessible enclosed area'
+                        element_difference = copy.deepcopy(element)
+                        element_difference.geom = element.geom.difference(enclosed_areas_union)
+                        element_intersects = True
+            if element_intersects:
+                elements_split.append(element_intersection)
+                if not element_difference.geom.is_empty:
+                    elements_split.append(element_difference)
+            else:
+                elements_split.append(element)
+        return elements_split
+
+    def crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements: list[OsmElement],
+                                                                            enclosed_areas: list[GeometryElement]) -> list[GeometryElement]:
+        """iterates over list of inaccessible enclosed areas and returns the cropped geometry if it intersects with an OsmElement
+
+        Args:
+            elements (list[OsmElement]): list of OsmElements
+            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+
+        Returns:
+            list[GeometryElement]: list of cropped or original inaccessible enclosed areas
+
+        Notes:
+            only returns the cropped inaccessible enclosed area if it is not an empty geometry and is of significant size (2 square metre)
+        """
+        enclosed_areas_cropped = []
+        elements_polygons_union = shapely.ops.unary_union([e.geom for e in elements if e.is_polygon() or e.is_multipolygon()])
+        for area in enclosed_areas:
+            area_intersects = False
+            if area.geom.intersects(elements_polygons_union):
+                area_cropped = copy.deepcopy(area)
+                area_cropped.geom = area.geom.difference(elements_polygons_union)
+                area_intersects = True
+            if area_intersects:
+                if not area_cropped.geom.is_empty and area_cropped.geom.area > 2:
+                    enclosed_areas_cropped.append(area_cropped)
+            else:
+                enclosed_areas_cropped.append(area)
+        return enclosed_areas_cropped
+
+    enclosed_areas_cleaned = drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements, enclosed_areas)
+    elements_split = split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements, enclosed_areas_cleaned)
+    enclosed_areas_cropped = crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements, enclosed_areas_cleaned)
+
+    return elements_split, enclosed_areas_cropped
 
 
 def drop_linestring_barriers_and_entrance_points(elements: list[OsmElement]) -> list[OsmElement]:
