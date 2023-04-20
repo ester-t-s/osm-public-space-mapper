@@ -108,35 +108,32 @@ if print_status:
     print('Setting missing access attribute based on space type')
 analyse_access.assume_access_based_on_space_type(dataset)
 
-
 # CLEANING DATA #
+if print_status:
+    print('Combining all elements that define space in a list')
+all_defined_space = dataset + buildings + inaccessible_enclosed_areas + pedestrian_ways + [road_and_rail]
 if print_status:
     print('Clipping overlapping polygons - be patient, that may take a while.')
 dataset, inaccessible_enclosed_areas = clean_data.clip_overlapping_polygons(dataset, buildings, inaccessible_enclosed_areas, road_and_rail, pedestrian_ways)
 
 
 # PREPARING FOR EXPORT #
-if print_status:
-    print('Combining all element lists that define space in a dictionary')
-all_defined_space_lists = {'dataset': dataset,
-                           'buildings': buildings,
-                           'inaccessible_enclosed_areas': inaccessible_enclosed_areas,
-                           'road_and_rail': list(road_and_rail.geoms)
-                           }
+
+
 if print_status:
     print('Projecting bounding box')
 bounding_box.project(local_crs)
 if print_status:
     print('Cropping all element lists to projected bounding box')
-all_defined_space_lists_cropped = clean_data.crop_defined_space_to_bounding_box(all_defined_space_lists, bounding_box)
+all_defined_space_cropped = clean_data.crop_defined_space_to_bounding_box(all_defined_space, bounding_box)
 if print_status:
     print('Getting undefined space within bounding box - be patient, that may take a while.')
-undefined_space_within_bbox = get_undefined_space.load(all_defined_space_lists_cropped, bounding_box)
+undefined_space_within_bbox = get_undefined_space.load(all_defined_space_cropped, bounding_box)
 
 # EXPORTIN #
 if print_status:
     print('Exporting all defined space and the undefined space to GeoJSON:', target_filepath)
-export_data.save2geojson(all_defined_space_lists_cropped,
+export_data.save2geojson(all_defined_space_cropped,
                          undefined_space_within_bbox,
                          target_filepath, local_crs
                          )
