@@ -64,10 +64,10 @@ if print_status:
     print('Getting inaccessible enclosed areas')
 inaccessible_enclosed_areas = analyse_access.get_inaccessible_enclosed_areas(inaccessible_barriers, buildings)
 if print_status:
-    print('Setting access attribute of OsmElements intersecting with inaccessible enclosed area')
-analyse_access.set_access_of_osm_elements_in_inaccessible_enclosed_areas(dataset, inaccessible_enclosed_areas)
+    print('Splitting elements if they overlap with inaccessible enclosed area and assign access - be patient, that may take a while.')
+dataset, inaccessible_enclosed_areas = analyse_access.compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(dataset, inaccessible_enclosed_areas)
 if print_status:
-    print('Clearing temporary attributes and dropping barriers from dataset')
+    print('Dropping LineString elements with barrier tag and entrance points from dataset')
 dataset = analyse_access.drop_linestring_barriers_and_entrance_points(dataset)
 
 # ANALYSING TRAFFIC AREA #
