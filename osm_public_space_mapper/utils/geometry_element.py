@@ -11,7 +11,7 @@ class GeometryElement:
                  space_type: None | str = None,
                  access: None | str = None,
                  access_derived_from: None | str = None,
-                 space_category: None | str = None):
+                 space_category: None | str = None) -> None:
         """Creates an object of the class GeometryElement with geometry and additional attributes set to None in beginning
 
         Args:
@@ -73,8 +73,7 @@ class GeometryElement:
         return self.__space_category
 
     def _set_space_category(self, category: str):
-        if self.__space_category is None:
-            self.__space_category = category
+        self.__space_category = category
     space_category = property(_get_space_category, _set_space_category)
 
     def _get_ignore(self) -> bool:
