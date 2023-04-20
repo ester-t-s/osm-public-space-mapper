@@ -1,10 +1,10 @@
 import copy
 import shapely
-from shapely.geometry import Polygon, MultiPolygon
 
 from example_application import local_variables as local_var
 from osm_public_space_mapper.utils.helpers import buffer_list_of_elements
 from osm_public_space_mapper.utils.osm_element import OsmElement
+from osm_public_space_mapper.utils.geometry_element import GeometryElement
 
 
 def set_traffic_space_type(elements: list[OsmElement]):
@@ -28,14 +28,14 @@ def set_traffic_space_type(elements: list[OsmElement]):
 
 
 def get_traffic_areas_as_polygons(elements: list[OsmElement],
-                                  inaccessible_enclosed_areas: list[Polygon | MultiPolygon],
+                                  inaccessible_enclosed_areas: list[GeometryElement],
                                   buildings: list[OsmElement],
                                   highway_default_widths: dict[str, tuple[float, float]] = None,
                                   cycleway_default_widths: dict[dict[str: float]] = None,
                                   tram_gauge: float = 1.435, tram_additional_carriageway_width: float = 0.5,
                                   train_gauge: float = 1.435, train_additional_carriageway_width: float = 1.5,
                                   pedestrian_way_default_width: float = 1.6,
-                                  ) -> list[Polygon | MultiPolygon]:
+                                  ) -> list[GeometryElement]:
 
     def buffer_osm_element(element: OsmElement) -> OsmElement:
         buffer_size = round(element.width/2, 1)
@@ -182,23 +182,23 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                 rails_polygons.append(e)
         return rails_polygons
 
-    def get_road_and_rail(elements: list[OsmElement]) -> list[OsmElement]:
+    def get_road_and_rail_polygons(elements: list[OsmElement]) -> list[OsmElement]:
         return (polygonize_highways(elements, highway_default_widths, cycleway_default_widths) +
                 polygonize_railways(elements, tram_gauge, tram_additional_carriageway_width, train_gauge, train_additional_carriageway_width))
 
     def get_cropper_geometries(elements: list[OsmElement],
-                               inaccessible_enclosed_areas: list[Polygon | MultiPolygon],
-                               buildings: list[OsmElement]) -> tuple[list[Polygon | MultiPolygon], list[Polygon | MultiPolygon]]:
+                               inaccessible_enclosed_areas: list[GeometryElement],
+                               buildings: list[OsmElement]) -> tuple[list[GeometryElement], list[GeometryElement]]:
 
         """combines and returns all geometries that should be used to crop the traffic areas again in case they were assumed to wide
 
         Args:
             elements (list[OsmElement): list of OsmElements with platform and pedestrian way elements
-            inaccessible_enclosed_areas (list[Polygon | MultiPolygon]): list of earlier defined inaccessible_enclosed_areas, because traffic areas will not be accessible there
+            inaccessible_enclosed_areas (list[GeometryElement]): list of earlier defined inaccessible_enclosed_areas, because traffic areas will not be accessible there
             buildings (list[OsmElement): list of OsmElements iwth buildings
 
         Returns:
-            tuple[list[Polygon | MultiPolygon], list[Polygon | MultiPolygon]]: list of cropper polygon or multipolygon geomtries instead of OsmElements, list of polygonized pedestrian ways
+            tuple[list[GeometryElement], list[GeometryElement]]: list of cropper geomtries, list of polygonized pedestrian ways
         """
         pedestrian_linestrings_buffered = buffer_list_of_elements([e for e in elements if e.space_type == 'walking area' and e.is_linestring() and not e.access_derived_from == 'inaccessible enclosed area'],
                                                                   buffer_size=pedestrian_way_default_width/2, cap_style='flat')
@@ -206,17 +206,22 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                                [e for e in elements if e.space_type == 'walking area' and (e.is_multipolygon() or e.is_polygon()) and not e.access_derived_from == 'inaccessible enclosed area'])
         buildings_buffered = buffer_list_of_elements(buildings, buffer_size=pedestrian_way_default_width, join_style='mitre')
         platform_polygons = [e for e in elements if e.space_type == 'public transport stop']
-        cropper_geometries = [e.geom for e in pedestrian_polygons] + [e.geom for e in buildings_buffered] + [e.geom for e in platform_polygons] + inaccessible_enclosed_areas
+        cropper_geometries = pedestrian_polygons + buildings_buffered + platform_polygons + inaccessible_enclosed_areas
         return cropper_geometries, pedestrian_polygons
 
-    def smooth_road_and_rail(road_and_rail_cropped):
-        first_buffer_size = pedestrian_way_default_width/2+0.01  # buffer with half width of buffered pedestrian way plus a little more to close crossings that were cut out during cropping
-        smooth_road_and_rail = road_and_rail_cropped.buffer(first_buffer_size, join_style='mitre').buffer(-first_buffer_size, join_style='mitre').buffer(0.5, join_style='round').buffer(-0.5, join_style='round')
+    def smooth_road_and_rail(road_and_rail_cropped: GeometryElement) -> GeometryElement:
+        first_buffer_size = pedestrian_way_default_width/2+0.1  # buffer with half width of buffered pedestrian way plus a little more to close crossings that were cut out during cropping
+        smooth_road_and_rail = copy.deepcopy(road_and_rail_cropped)
+        smooth_road_and_rail.geom = smooth_road_and_rail.geom.buffer(first_buffer_size, join_style='mitre').buffer(-first_buffer_size, join_style='mitre').buffer(0.3, join_style='round').buffer(-0.3, join_style='round')
         return smooth_road_and_rail
 
-    road_and_rail = get_road_and_rail(elements)
+    road_and_rail = get_road_and_rail_polygons(elements)
     cropper_geometries, pedestrian_polygons = get_cropper_geometries(elements, inaccessible_enclosed_areas, buildings)
-    cropper_geometries_union = shapely.ops.unary_union(cropper_geometries).buffer(0.3).buffer(-0.3)
+    cropper_geometries_union = shapely.ops.unary_union([e.geom for e in cropper_geometries]).buffer(0.3).buffer(-0.3)
     road_and_rail_union = shapely.ops.unary_union([e.geom for e in road_and_rail])
-    road_and_rail_cropped = road_and_rail_union.difference(cropper_geometries_union)
+    road_and_rail_cropped = GeometryElement(geometry=road_and_rail_union.difference(cropper_geometries_union),
+                                            space_type='traffic area',
+                                            access='no',
+                                            access_derived_from='space type'
+                                            )
     return smooth_road_and_rail(road_and_rail_cropped), pedestrian_polygons

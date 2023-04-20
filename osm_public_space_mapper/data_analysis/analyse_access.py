@@ -2,6 +2,7 @@ import shapely
 from shapely.geometry import Polygon, MultiPolygon
 from osm_public_space_mapper.utils.helpers import buffer_list_of_elements
 from osm_public_space_mapper.utils.osm_element import OsmElement
+from osm_public_space_mapper.utils.geometry_element import GeometryElement
 
 
 def interprete_tags(elements: list[OsmElement]) -> None:
@@ -156,7 +157,7 @@ def get_inaccessible_barriers(elements: list[OsmElement]) -> list[OsmElement]:
     return [e for e in elements if e.access == 'no' and e.is_barrier()]
 
 
-def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], buildings: list[OsmElement]) -> list[Polygon | MultiPolygon]:
+def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], buildings: list[OsmElement]) -> list[GeometryElement]:
     """returns the polygons / multipolygons that are enclosed by inaccessible barriers and buildings
 
     Args:
@@ -164,9 +165,8 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
         buildings (list[OsmElement]): list of buildings as OsmElements
 
     Returns:
-        list[Polygon|MultiPolygon]: list of shapely Polygons or MultiPolygons that are enclosed by inaccessible barriers and buildings
+        list[GeometryElement]: list of GeometryElements that are enclosed by inaccessible barriers and buildings
     """
-
     buffer_size = 0.001
     barriers_buffered = buffer_list_of_elements(inaccessible_barriers, buffer_size, cap_style='square')
     buildings_buffered = buffer_list_of_elements(buildings, buffer_size, cap_style='square')
@@ -175,7 +175,11 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
     for polygon in barriers_buildings_union.geoms:
         if len(polygon.interiors) > 0:
             for i in range(len(polygon.interiors)):
-                inaccessible_enclosed_areas.append(Polygon(polygon.interiors[i]).buffer(buffer_size, cap_style='square'))
+                inaccessible_enclosed_areas.append(GeometryElement(geometry=Polygon(polygon.interiors[i]).buffer(buffer_size, cap_style='square'),
+                                                                   access='no',
+                                                                   access_derived_from='inaccessible enclosed areas',
+                                                                   space_type='undefined space'
+                                                                   ))
     # Because of the buffering, this function leads to some weird, thin shapes. A cleaner way of processing should be implemented
     return inaccessible_enclosed_areas
 
