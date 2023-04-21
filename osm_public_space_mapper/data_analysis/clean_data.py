@@ -173,7 +173,7 @@ def drop_irrelevant_elements_based_on_tags(elements: list[OsmElement]) -> list[O
         Returns:
             list[OsmElement]: filtered list
         """
-        relevant_tags = ['highway', 'public_transport', 'railway', 'barrier', 'amenity', 'leisure', 'natural',
+        relevant_tags = ['highway', 'public_transport', 'railway', 'barrier', 'amenity', 'leisure', 'natural', 'water',
                          'parking', 'embankment', 'landuse', 'footway', 'bridge', 'place', 'construction', 'parking_space', 'man_made'
                          ]
         for e in elements:
