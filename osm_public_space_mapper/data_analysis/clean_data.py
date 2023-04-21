@@ -247,15 +247,18 @@ def drop_road_rail_walking(elements: list[OsmElement]) -> list[OsmElement]:
 
 
 def set_space_category(elements: list[OsmElement | GeometryElement]) -> list[OsmElement | GeometryElement]:
-    categories = {'greenspace': ['dog_park', 'flowerbed', 'grass', 'park', 'sand', 'village_green', 'garden'],
-                  'play and sports': ['playground', 'pitch', 'fitness_station'],
-                  'water': ['fountain', 'water', 'wetland'],
+    categories = {'greenspace': ['dog_park', 'flowerbed', 'grass', 'park', 'sand', 'village_green', 'garden',
+                                 'grassland', 'scrub', 'meadow', 'wood', 'allotments', 'beach', 'recreation_ground',
+                                 'islet', 'forest', 'heath', 'nature_reserve', 'greenfield'],
+                  'play and sports': ['playground', 'pitch', 'fitness_station', 'track', 'miniature_golf', 'horse_riding'],
+                  'water': ['fountain', 'water', 'wetland', 'swimming_pool'],
                   'traffic area': ['parking', 'traffic area'],
-                  'open space': ['public transport stop', 'square'],
+                  'open space': ['public transport stop', 'square', 'scree', 'bridge', 'pier', 'marina', 'outdoor_seating', 'biergarten'],
                   'building': ['building'],
                   'undefined space': ['undefined space'],
                   'walking area': ['walking area'],
-                  'inaccessible enclosed area': ['inaccessible enclosed area']
+                  'inaccessible enclosed area': ['inaccessible enclosed area'],
+                  'construction': ['construction']
                   }
     for e in elements:
         for category, space_types in categories.items():
