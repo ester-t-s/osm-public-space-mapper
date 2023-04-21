@@ -323,7 +323,7 @@ def assume_access_based_on_space_type(elements: list[OsmElement]) -> None:
                                           ]  # because usually linked to comsumption / fees / hours which might not be recorded in OSM
     space_types_without_access = ['allotments', 'construction', 'landfill', 'military', 'railway', 'flowerbed', 'fountain',
                                   'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery',
-                                  'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir'
+                                  'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir', 'meadow'
                                   ]
     for element in [e for e in elements if e.access is None and e.space_type is not None]:
         if element.space_type in space_types_with_access:
@@ -335,3 +335,5 @@ def assume_access_based_on_space_type(elements: list[OsmElement]) -> None:
         elif element.space_type in space_types_without_access:
             element.access = 'no'
             element.access_derived_from = 'space type'
+        if not element.access:
+            print('No access categorized for', element.space_type)
