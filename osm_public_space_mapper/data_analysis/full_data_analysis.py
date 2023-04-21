@@ -125,7 +125,7 @@ all_defined_space = clean_data.merge_elements_with_identical_attributes(all_defi
 
 if print_status:
     print('Clipping overlapping polygons - be patient, that may take a while.')
-dataset = clean_data.crop_overlapping_polygons(all_defined_space)
+all_defined_space = clean_data.crop_overlapping_polygons(all_defined_space)
 
 # PREPARING FOR EXPORT #
 
