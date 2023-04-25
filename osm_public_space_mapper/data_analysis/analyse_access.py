@@ -65,6 +65,22 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
             the access attribute can not be overwritten, so if it was set earlier and with a more reliable source, e.g. based on an access tag, this step will not influence the value of the access attribute
         """
 
+        def set_access_attribute_of_entrances(intersecting_entrances: list[OsmElement]) -> None:
+            """sets access attribute of the intersecting entrances if it was not set beforehand
+
+            Args:
+                intersecting_entrances (list[OsmElement]): list of intersecting entrances
+
+            Notes:
+                For gates, default access 'no' is assumed, if no tag indicates something else (which was analysed earlier), because gate counts as a barrier
+                For all other entrances (highways and crossings), default access 'yes' is assumed
+            """
+            for entrance in intersecting_entrances:
+                if entrance.tags.get('barrier') == 'gate':
+                    entrance.access = 'no'
+                else:
+                    entrance.access = 'yes'
+
         def set_barrier_access_attribute_with_single_entrance(barrier: OsmElement, intersecting_entrance: OsmElement) -> None:
             """sets the access attribute of a barrier based on a single intersecting entrance
 
@@ -72,10 +88,7 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
                 barrier (OsmElement): barrier that is analysed
                 intersecting_entrance (OsmElement): entrance that intersect with the barrier
             """
-            if intersecting_entrance.access is None:
-                barrier.access = 'yes'
-            else:
-                barrier.access = intersecting_entrance.access
+            barrier.access = intersecting_entrance.access
 
         def set_barrier_access_attribute_with_multiple_entrances(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
             """sets the access attribute of a barrier based on multiple intersecting entrances
