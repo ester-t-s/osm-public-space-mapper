@@ -358,7 +358,7 @@ def assume_access_based_on_space_type(elements: list[OsmElement]) -> None:
                                'greenhouse_horticulture', 'meadow', 'nature_reserve', 'recreation_ground', 'scree',
                                'scrub', 'village_green', 'wood', 'cemetery', 'grass', 'pitch', 'beach', 'bridge',
                                'common',  'island', 'marina', 'pier', 'water_park', 'religious', 'shelter', 'grassland',
-                               'greenfield'
+                               'greenfield', 'walking area'
                                ]
     space_types_with_restricted_access = ['outdoor_seating', 'sports_centre', 'swimming_pool', 'biergarten',
                                           'miniature_golf', 'stadium', 'horse_riding'
