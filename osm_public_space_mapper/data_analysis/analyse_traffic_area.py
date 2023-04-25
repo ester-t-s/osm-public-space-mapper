@@ -53,16 +53,16 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
             list[OsmElement]: list of only highways as OsmElements with buffered geom attribute
         """
         def set_road_width(element: OsmElement,
-                           highway_default_widths: dict[str, tuple[float, float]] = {'footway': (2, 1), 'service': (4.5, 3), 'residential': (4.5, 3), 'steps': (2, 1.5),
-                                                                                     'tertiary': (4.5, 3), 'primary': (5.5, 3), 'cycleway': (2, 1.5), 'secondary': (4.5, 3),
-                                                                                     'path': (2, 1), 'motorway_link': (6.5, 3), 'platform': (2, 1.5), 'pedestrian': (2, 2),
-                                                                                     'motorway': (6.5, 3), 'living_street': (4.5, 3), 'unclassified': (4.5, 3), 'primary_link': (5.5, 3),
-                                                                                     'track': (3, 2), 'corridor': (2, 1), 'proposed': (5, 3), 'secondary_link': (5, 3),
-                                                                                     'construction': (5, 3), 'everything else': (5, 3)},
+                           highway_default_widths: dict[str, tuple[float, float]] = {'service': (4.5, 3), 'residential': (4.5, 3), 'tertiary': (4.5, 3), 'primary': (5.5, 3),
+                                                                                     'cycleway': (2, 1.5), 'secondary': (4.5, 3), 'motorway_link': (6.5, 3), 'platform': (2, 1.5),
+                                                                                     'motorway': (6.5, 3), 'unclassified': (4.5, 3), 'primary_link': (5.5, 3), 'secondary_link': (5, 3),
+                                                                                     'construction': (5, 3), 'everything else': (5, 3)
+                                                                                     },
                            cycleway_default_widths: dict[dict[str: float]] = {'cycleway': {'lane': 1.5, 'opposite': 1, 'track': 1.5, 'opposite_lane': 1.5, 'opposite_track': 1.5},
                                                                               'cycleway:right': {'lane': 1.5, 'track': 1.5},
                                                                               'cycleway:both': {'lane': 2*1.5, 'track': 2*1.5},
-                                                                              'cycleway:left': {'lane': 1.5, 'track': 1.5}}) -> None:
+                                                                              'cycleway:left': {'lane': 1.5, 'track': 1.5}
+                                                                              }) -> None:
             """Sets road width of a highway element in width attribute, either taken from width tags or estimated based on default values and
 
             Args:
