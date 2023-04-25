@@ -334,7 +334,7 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
     elements_split = split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements, enclosed_areas_cleaned)
     enclosed_areas_cropped = crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements, enclosed_areas_cleaned)
 
-    return elements_split, enclosed_areas_cropped
+    return elements_split, road_and_rail_cropped, pedestrian_ways_cropped, enclosed_areas_cropped
 
 
 def drop_linestring_barriers_and_entrance_points(elements: list[OsmElement]) -> list[OsmElement]:
