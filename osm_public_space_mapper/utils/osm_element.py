@@ -66,6 +66,12 @@ class OsmElement(GeometryElement):
                         building = True
         return building
 
+    def is_building_passage(self) -> bool:
+        if self.has_tag('highway') and self.tags.get('tunnel') == 'building_passage':
+            return True
+        else:
+            return False
+
     def is_crossing(self) -> bool:
         """identifies an element as crossing depending on tags
 

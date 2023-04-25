@@ -1,3 +1,4 @@
+import shapely
 from osm_public_space_mapper.utils.osm_element import OsmElement
 
 
@@ -16,6 +17,18 @@ def get_and_drop_buildings(elements: list[OsmElement]) -> tuple[list[OsmElement]
         b.access = 'no'
     elements = [e for e in elements if not e.is_building()]
     return elements, buildings
+
+
+def clip_building_passages_from_buildings(buildings: list[OsmElement], elements: list[OsmElement]) -> list[OsmElement]:
+    building_passages = []
+    for e in elements:
+        if e.is_building_passage() and (e.access is None or e.access == 'yes'):
+            building_passages.append(e.geom)
+    building_passages_union = shapely.ops.unary_union(building_passages)
+    for b in buildings:
+        if b.geom.intersects(building_passages_union):
+            b.geom = b.geom.difference(building_passages_union)
+    return [b for b in buildings if not b.geom.is_empty]
 
 
 def set_missing_space_types(elements: list[OsmElement]) -> None:
