@@ -136,6 +136,12 @@ class OsmElement(GeometryElement):
         highway_for_pedestrians = set(('footway', 'steps', 'path', 'pedestrian', 'living_street', 'track'))
         return self.tags.get('highway') in highway_for_pedestrians and not self.is_crossing()
 
+    def is_shared_cycleway_footway(self) -> bool:
+        if self.tags.get('highway') in ['cycleway', 'footway'] and self.tags.get('segregated') == 'no':
+            return True
+        else:
+            return False
+
     def is_platform_polygon(self) -> bool:
         """identifies an element as a public transport platform polygon based on tags and values and geometry type
 

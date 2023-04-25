@@ -14,7 +14,7 @@ def set_traffic_space_type(elements: list[OsmElement]):
         elements (list[OsmElement]): list of OsmElements to iterate over
     """
     for e in elements:
-        if e.is_pedestrian_way():
+        if e.is_pedestrian_way() or e.is_shared_cycleway_footway():
             e.space_type = 'walking area'
         elif e.is_platform_polygon():
             e.space_type = 'public transport stop'
