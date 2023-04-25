@@ -257,7 +257,6 @@ def set_space_category(elements: list[OsmElement | GeometryElement]) -> list[Osm
                   'building': ['building'],
                   'undefined space': ['undefined space'],
                   'walking area': ['walking area'],
-                  'inaccessible enclosed area': ['inaccessible enclosed area'],
                   'construction': ['construction']
                   }
     for e in elements:
@@ -270,13 +269,25 @@ def set_space_category(elements: list[OsmElement | GeometryElement]) -> list[Osm
     return elements
 
 
-def merge_elements_with_identical_attributes(elements: list[OsmElement | GeometryElement]) -> list[OsmElement | GeometryElement]:
+def merge_elements_with_identical_attributes(elements: list[OsmElement | GeometryElement]) -> list[GeometryElement]:
+    """merge elements with identical space category and access to reduce overlaps between elements
+
+    Args:
+        elements (list[OsmElement  |  GeometryElement]): list of elements defining all defined space
+
+    Returns:
+        list[GeometryElement]: list of merged elements
+    """
     merged_elements = []
     space_categories = set([e.space_category for e in elements])
     access_categories = set([e.access for e in elements])
     for sc in space_categories:
         for ac in access_categories:
-            merged_geometry = shapely.ops.unary_union([e.geom for e in elements if e.space_category == sc and e.access == ac])
+            geometries_to_merge = []
+            for e in elements:
+                if e.space_category == sc and e.access == ac:
+                    geometries_to_merge.append(e.geom)
+            merged_geometry = shapely.ops.unary_union(geometries_to_merge)
             if not merged_geometry.is_empty:
                 merged_elements.append(GeometryElement(geometry=merged_geometry, space_category=sc, access=ac))
     return merged_elements
@@ -284,31 +295,56 @@ def merge_elements_with_identical_attributes(elements: list[OsmElement | Geometr
 
 def crop_overlapping_polygons(elements: list[OsmElement | GeometryElement]) -> list[OsmElement | GeometryElement]:
 
-    def clip_category_from_elements(category_to_clip: str, categories_to_crop: list[str] | None = None, elements: list[OsmElement | GeometryElement] = elements) -> None:
+    def clip_elements_within_category(elements: list[OsmElement | GeometryElement]) -> list[OsmElement | GeometryElement]:
+
+        def clip_access_no(elements: list[OsmElement | GeometryElement], space_category: str) -> None:
+            geometry_to_clip = shapely.ops.unary_union([e.geom for e in elements if e.space_category == space_category and e.access == 'no'])
+            if not geometry_to_clip.is_empty:
+                for e in elements:
+                    if e.space_category == sc and e.access in ['yes', 'restricted']:
+                        e.geom = e.geom.difference(geometry_to_clip)
+
+        def clip_access_restricted(elements: list[OsmElement | GeometryElement], space_category: str) -> None:
+            geometry_to_clip = shapely.ops.unary_union([e.geom for e in elements if e.space_category == space_category and e.access == 'restricted'])
+            if not geometry_to_clip.is_empty:
+                for e in elements:
+                    if e.space_category == sc and e.access == 'yes':
+                        e.geom = e.geom.difference(geometry_to_clip)
+
+        space_categories = set([e.space_category for e in elements])
+        for sc in space_categories:
+            if len(set([e.access for e in elements if e.space_category == sc])) > 1:
+                clip_access_no(elements, sc)
+                clip_access_restricted(elements, sc)
+
+    def clip_category_from_elements(elements: list[OsmElement | GeometryElement], category_to_clip: str, categories_to_crop: list[str] | None = None) -> None:
         geometry_to_clip = shapely.ops.unary_union([e.geom for e in elements if e.space_category == category_to_clip])
         for e in elements:
-            if not categories_to_crop:  # if no category to crop is specified
+            if not categories_to_crop:  # if no category to crop is specified elements from all categories apart from category_to_clip are cropped
                 if not e.space_category == category_to_clip:
                     e.geom = e.geom.difference(geometry_to_clip)
             else:
                 if e.space_category in categories_to_crop:
                     e.geom = e.geom.difference(geometry_to_clip)
-            if type(e.geom) == GeometryCollection:
+            if type(e.geom) == GeometryCollection:  # convert GeometryCollections to MultiPolygons, dropping Points and LineStrings, for further processing
                 e.geom = MultiPolygon([g for g in list(e.geom.geoms) if (type(g) == Polygon or type(g) == MultiPolygon)])
 
-    clip_category_from_elements(category_to_clip='building')
-    clip_category_from_elements(category_to_clip='water')
-    clip_category_from_elements(category_to_clip='inaccessible enclosed area', categories_to_crop=['traffic area', 'open space', 'walking area'])
-    clip_category_from_elements(category_to_clip='walking area', categories_to_crop=['greenspace', 'play and sports'])
-    clip_category_from_elements(category_to_clip='play and sports')
-    clip_category_from_elements(category_to_clip='greenspace')
-    clip_category_from_elements(category_to_clip='traffic area', categories_to_crop=['open space', 'walking area'])
+    clip_elements_within_category(elements)
+    clip_category_from_elements(elements, category_to_clip='building')
+    clip_category_from_elements(elements, category_to_clip='construction')
+    clip_category_from_elements(elements, category_to_clip='water')
+    clip_category_from_elements(elements, category_to_clip='undefined space', categories_to_crop=['traffic area', 'open space', 'walking area'])  # undefined space at this point are only the inaccessible enclosed areas
+    clip_category_from_elements(elements, category_to_clip='walking area', categories_to_crop=['greenspace', 'play and sports'])
+    clip_category_from_elements(elements, category_to_clip='play and sports')
+    clip_category_from_elements(elements, category_to_clip='greenspace')
+    clip_category_from_elements(elements, category_to_clip='traffic area', categories_to_crop=['open space', 'walking area'])
     for e in elements:
         if e.space_category == 'walking area':
             e.space_category = 'open space'
         elif e.space_category == 'inaccessible enclosed area':
-            e.space_category = 'undefined space'
-    merge_elements_with_identical_attributes(elements)
+            print('space type inaccesisble area found')
+            # e.space_category = 'undefined space'
+    elements = merge_elements_with_identical_attributes(elements)
     return elements
 
 
