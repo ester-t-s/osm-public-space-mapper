@@ -143,6 +143,7 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
             else:
                 barrier.access = 'no'
 
+        set_access_attribute_of_entrances(intersecting_entrances)
         if len(intersecting_entrances) == 0:
             barrier.access = 'no'
         elif len(intersecting_entrances) == 1:
