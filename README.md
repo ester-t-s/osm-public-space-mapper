@@ -19,7 +19,7 @@ The example_application can for example be visualized according to public access
 
 ## Limitations
 The script is not optimized for performance. An analysis for an area of around 1 km2 should be processed in around five minutes. Bigger areas take significantly longer.
-The analysis only looks at outdoor elements. Buidlings and everything located in buildings is ignored.
+The analysis only looks at outdoor elements. Buildings and everything located in buildings is ignored.
 The analysis was developed with Western European cities in mind and is applied to a part of Vienna. The assumptions about public space lying behind the analysis might not be equally applicable to very different cultural and spatial contexts.
 
 ## Contributing
