@@ -198,7 +198,34 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
 
 
 def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(elements: list[OsmElement],
+                                                                                    road_and_rail: list[OsmElement],
+                                                                                    pedestrian_ways: list[OsmElement],
                                                                                     enclosed_areas: list[GeometryElement]) -> tuple((list[OsmElement], list[GeometryElement])):
+
+    def crop_road_rail_pedestrian_ways(road_and_rail: list[OsmElement], pedestrian_ways: list[OsmElement], enclosed_areas: list[GeometryElement]) -> tuple((list[OsmElement], list[OsmElement])):
+        """crops the geometries of road and rail and pedestrian ways to the parts not intersecting with inaccessible enclosed areas
+
+        Args:
+            road_and_rail (list[OsmElement]): list of road and rail elements
+            pedestrian_ways (list[OsmElement]): list of pedestrian way elements
+            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+
+        Returns:
+            tuple((list[OsmElement], list[OsmElement])): list of cropped road and rail and list of cropped pedestrian ways
+        """
+        road_and_rail_cropped, pedestrian_ways_cropped = [], []
+        enclosed_areas_union = shapely.ops.unary_union([e.geom for e in enclosed_areas])
+        for e in road_and_rail:
+            e_cropped = copy.deepcopy(e)
+            if e.geom.intersects(enclosed_areas_union):
+                e_cropped.geom = e.geom.difference(enclosed_areas_union)
+            road_and_rail_cropped.append(e_cropped)
+        for e in pedestrian_ways:
+            e_cropped = copy.deepcopy(e)
+            if e.geom.intersects(enclosed_areas_union):
+                e_cropped.geom = e.geom.difference(enclosed_areas_union)
+            pedestrian_ways_cropped.append(e_cropped)
+        return road_and_rail_cropped, pedestrian_ways_cropped
 
     def drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements: list[OsmElement], enclosed_areas: list[GeometryElement]) -> list[GeometryElement]:
         """iterates over list of inaccessible enclosed areas and list of OsmElements and sets access = no on OsmElements with significant overlap with inaccessible enclosed area
@@ -302,6 +329,7 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
                 enclosed_areas_cropped.append(area)
         return enclosed_areas_cropped
 
+    road_and_rail_cropped, pedestrian_ways_cropped = crop_road_rail_pedestrian_ways(road_and_rail, pedestrian_ways, enclosed_areas)
     enclosed_areas_cleaned = drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements, enclosed_areas)
     elements_split = split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements, enclosed_areas_cleaned)
     enclosed_areas_cropped = crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements, enclosed_areas_cleaned)
