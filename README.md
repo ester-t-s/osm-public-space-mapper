@@ -21,7 +21,7 @@ The example_application can for example be visualized according to public access
 ### Technical limitations
 The script is not optimized for performance. An analysis for an area of around 1 km2 should be processed in around five minutes. Bigger areas take significantly longer.
 ### Filtering limitations
-The analysis only looks at outdoor elements. Buildings and everything located in buildings is ignored. Apart from that, OSM relations are not processed (used package esy.osm.shape can not transform OSM relations to shapely geometries).
+The analysis only looks at outdoor elements. Buildings and everything located in buildings is ignored. Apart from that, OSM relations are not processed (used package esy.osm.shape can not transform OSM relations to shapely geometries). The analysis is built from a groundfloor perspective, ignoring elements that are not on the ground floor and cropping buildings, if a building passage leads through them.
 ### Context limitations
 The analysis was developed with Western European cities in mind and is applied to a part of Vienna. The assumptions about public space lying behind the analysis might not be equally applicable to very different cultural and spatial contexts.
 
