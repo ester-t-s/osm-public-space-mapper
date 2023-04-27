@@ -342,8 +342,7 @@ def crop_overlapping_polygons(elements: list[OsmElement | GeometryElement]) -> l
         if e.space_category == 'walking area':
             e.space_category = 'open space'
         elif e.space_category == 'inaccessible enclosed area':
-            print('space type inaccesisble area found')
-            # e.space_category = 'undefined space'
+            e.space_category = 'undefined space'
     elements = merge_elements_with_identical_attributes(elements)
     return elements
 
