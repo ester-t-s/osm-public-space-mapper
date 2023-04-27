@@ -1,11 +1,14 @@
+from typing import Tuple, Optional, TypeAlias
 import shapely
-from shapely.geometry import LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
+from shapely.geometry import (
+    LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
+)
 import esy.osm.shape
+
+ShapelyGeometry: TypeAlias = LinearRing | Polygon | MultiPolygon | Point | MultiPoint | LineString | MultiLineString
 
 
 class GeometryElement:
-
-    ShapelyGeometry = LinearRing | Polygon | MultiPolygon | Point | MultiPoint | LineString | MultiLineString
 
     def __init__(self, geometry: ShapelyGeometry,
                  space_type: None | str = None,
@@ -15,7 +18,7 @@ class GeometryElement:
         """Creates an object of the class GeometryElement with geometry and additional attributes set to None in beginning
 
         Args:
-            attr (tuple[ShapelyGeometry  |  esy.osm.shape.shape.Invalid, int, dict]): Attributes of the OsmElement as a tuple with geometry, id and tags as returned by esy.osm.shape
+            attr (Tuple[ShapelyGeometry  |  esy.osm.shape.shape.Invalid, int, dict]): Attributes of the OsmElement as a tuple with geometry, id and tags as returned by esy.osm.shape
 
         Raises:
             TypeError: raised if attr are not given as tuple with three elements
@@ -47,10 +50,10 @@ class GeometryElement:
             self.__space_type = space_type
     space_type = property(_get_space_type, _set_space_type)
 
-    def _get_access(self) -> None | str:
+    def _get_access(self) -> Optional[str]:
         return self.__access
 
-    def _set_access(self, attr: str | tuple[str]) -> None:
+    def _set_access(self, attr: str | Tuple[str]) -> None:
         if type(attr) == str:
             access_type = attr
             if self.__access is None:

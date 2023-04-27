@@ -1,5 +1,6 @@
 import copy
 import shapely
+from typing import List, Tuple
 
 from example_application import local_variables as local_var
 from osm_public_space_mapper.utils.helpers import buffer_list_of_elements
@@ -7,11 +8,11 @@ from osm_public_space_mapper.utils.osm_element import OsmElement
 from osm_public_space_mapper.utils.geometry_element import GeometryElement
 
 
-def set_traffic_space_type(elements: list[OsmElement]):
+def set_traffic_space_type(elements: List[OsmElement]):
     """iterates over list of OsmElements and sets space type attribute if element is traffic area (walking area, public transport stop, parking, rail, road)
 
     Args:
-        elements (list[OsmElement]): list of OsmElements to iterate over
+        elements (List[OsmElement]): list of OsmElements to iterate over
     """
     for e in elements:
         if e.is_pedestrian_way() or e.is_shared_cycleway_footway():
@@ -27,28 +28,39 @@ def set_traffic_space_type(elements: list[OsmElement]):
             e.space_type = 'road'
 
 
-def get_traffic_areas_as_polygons(elements: list[OsmElement],
-                                  highway_default_widths: dict[str, tuple[float, float]] = None,
+def get_traffic_areas_as_polygons(elements: List[OsmElement],
+                                  highway_default_widths: dict[str, Tuple[float, float]] = None,
                                   cycleway_default_widths: dict[dict[str: float]] = None,
                                   tram_gauge: float = 1.435, tram_additional_carriageway_width: float = 0.5,
                                   train_gauge: float = 1.435, train_additional_carriageway_width: float = 1.5,
-                                  ) -> list[GeometryElement]:
+                                  ) -> List[GeometryElement]:
 
-    def polygonize_highways(elements: list[OsmElement], highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> list[OsmElement]:
+    def polygonize_highways(elements: List[OsmElement], highway_default_widths: dict[str, Tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> List[OsmElement]:
         """iterates over list of OsmElements and buffers highways if LineString and thus transforms them to Polygons based on given or estimated width and returns them in a list
 
         Args:
-            elements (list[OsmElement]): list of OsmElements to iterate over and set geom_buffered attribute
+            elements (List[OsmElement]): list of OsmElements to iterate over and set geom_buffered attribute
 
         Returns:
-            list[OsmElement]: list of only highways as OsmElements with geom_buffered attribute
+            List[OsmElement]: list of only highways as OsmElements with geom_buffered attribute
         """
         def set_road_width(element: OsmElement,
-                           highway_default_widths: dict[str, tuple[float, float]] = {'service': (4.5, 3), 'residential': (4.5, 3), 'tertiary': (4.5, 3), 'primary': (5.5, 3),
-                                                                                     'cycleway': (2, 1.5), 'secondary': (4.5, 3), 'motorway_link': (6.5, 3), 'platform': (2, 1.5),
-                                                                                     'motorway': (6.5, 3), 'unclassified': (4.5, 3), 'primary_link': (5.5, 3), 'secondary_link': (5, 3),
-                                                                                     'construction': (5, 3), 'everything else': (5, 3)
-                                                                                     },
+                           highway_default_widths: dict[str, Tuple[float, float]] = {
+                               'service': (4.5, 3),
+                               'residential': (4.5, 3),
+                               'tertiary': (4.5, 3),
+                               'primary': (5.5, 3),
+                               'cycleway': (2, 1.5),
+                               'secondary': (4.5, 3),
+                               'motorway_link': (6.5, 3),
+                               'platform': (2, 1.5),
+                               'motorway': (6.5, 3),
+                               'unclassified': (4.5, 3),
+                               'primary_link': (5.5, 3),
+                               'secondary_link': (5, 3),
+                               'construction': (5, 3),
+                               'everything else': (5, 3)
+                            },
                            cycleway_default_widths: dict[dict[str: float]] = {'cycleway': {'lane': 1.5, 'opposite': 1, 'track': 1.5, 'opposite_lane': 1.5, 'opposite_track': 1.5},
                                                                               'cycleway:right': {'lane': 1.5, 'track': 1.5},
                                                                               'cycleway:both': {'lane': 2*1.5, 'track': 2*1.5},
@@ -58,17 +70,17 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
 
             Args:
                 element (OsmElement): the OsmElement to analyse
-                highway_default_widths (dict[str, tuple[float, float]]): dictionary with default highway widths of the roadway without parking, cycle lane etc. in a dictionary for each OSM highway type.
+                highway_default_widths (dict[str, Tuple[float, float]]): dictionary with default highway widths of the roadway without parking, cycle lane etc. in a dictionary for each OSM highway type.
                                                                         Each dict element has a tuple consisting of the value for bi-directional and uni-directional highways.
                 cycleway_default_widths (dict[dict[str: float]]): default cyleway widths with separate values given for different tags and their values in a nested dictionary.
             """
 
-            def estimate_road_width(element: OsmElement, highway_default_widths: dict[str, tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> float:
+            def estimate_road_width(element: OsmElement, highway_default_widths: dict[str, Tuple[float, float]], cycleway_default_widths: dict[dict[str: float]]) -> float:
                 """estimates road with of an OsmElement based on default values and tags and returns the width
 
                 Args:
                     element (OsmElement): the OsmElement to analyse
-                    highway_default_widths (dict[str, tuple[float, float]]): dictionary with default highway widths of the roadway without parking, cycle lane etc. in a dictionary for each OSM highway type.
+                    highway_default_widths (dict[str, Tuple[float, float]]): dictionary with default highway widths of the roadway without parking, cycle lane etc. in a dictionary for each OSM highway type.
                                                                             Each dict element has a tuple consisting of the value for bi-directional and uni-directional highways.
                     cycleway_default_widths (dict[dict[str: float]]): default cyleway widths with separate values given for different tags and their values in a nested dictionary
 
@@ -76,7 +88,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                     float: estimated width
                 """
 
-                def set_base_highway_width(element: OsmElement, direction: str, highway_default_widths: dict[str, tuple[float, float]]) -> float:
+                def set_base_highway_width(element: OsmElement, direction: str, highway_default_widths: dict[str, Tuple[float, float]]) -> float:
                     i = 1 if direction == 'uni-directional' else 0 if direction == 'bi-directional' else None
                     if element.tags.get('highway') in highway_default_widths:
                         width = highway_default_widths[element.tags.get('highway')][i]
@@ -87,7 +99,7 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                 def adapt_to_lanes(element: OsmElement, width: float, direction: str) -> float:
                     normal_lane_number = 1 if direction == 'uni-directional' else 2 if direction == 'bi-directional' else None
                     if element.has_tag('lanes') and float(element.tags.get('lanes')) != normal_lane_number:
-                        width = width * float(element.tags.get('lanes'))/normal_lane_number
+                        width = width * float(element.tags.get('lanes')) / normal_lane_number
                     return width
 
                 def add_cycleway(element: OsmElement, width: float, cycleway_default_widths: dict[dict[str: float]]) -> float:
@@ -100,14 +112,14 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
 
                 def add_parking(element: OsmElement,
                                 width: float,
-                                highway_types_for_default_streetside_parking: list[str] = ['residential', 'tertiary', 'living_street', 'secondary', 'primary'],
+                                highway_types_for_default_streetside_parking: List[str] = ['residential', 'tertiary', 'living_street', 'secondary', 'primary'],
                                 default_parking_width: float = 6.5) -> float:
                     """adds a default value to the given width if highway is of specific type
 
                     Args:
                         element (OsmElement): highway OsmElement
                         width (float): current width of the element
-                        highway_types_for_default_streetside_parking (list[str], optional): highway tag values where parking is assumed.
+                        highway_types_for_default_streetside_parking (List[str], optional): highway tag values where parking is assumed.
                                                                                             Defaults to ['residential', 'tertiary', 'living_street', 'secondary', 'primary'].
                         default_parking_width (float, optional): _description_. Defaults to 6.5, assuming one side horizontal (2m) and one side angle parking (4.5m),
                                                                 taken from OSM Verkehrswende project https://parkraum.osm-verkehrswende.org/project-prototype-neukoelln/report/#27-fl%C3%A4chenverbrauch
@@ -150,18 +162,18 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
                 highways_polygons.append(e)
         return highways_polygons
 
-    def polygonize_railways(elements: list[OsmElement], tram_gauge: float, tram_additional_carriageway_width: float, train_gauge: float, train_additional_carriageway_width: float) -> list[OsmElement]:
+    def polygonize_railways(elements: List[OsmElement], tram_gauge: float, tram_additional_carriageway_width: float, train_gauge: float, train_additional_carriageway_width: float) -> List[OsmElement]:
         """iterates over list of OsmElements and buffers railways and thus transforms the LineStrings to Polygons based on tram and train gauge and buffer size
 
         Args:
-            elements (list[OsmElement]): list of OsmElements to iterate over and set geom_buffered attribute if applicable
+            elements (List[OsmElement]): list of OsmElements to iterate over and set geom_buffered attribute if applicable
             tram_gauge (float): tram gauge. Defaults to 1.435
             tram_additional_carriageway_width (float): tram buffer size of what should be added to the tram gauge for total tram rail width
             train_gauge (float): train gauge. Defaults to 1.435
             train_additional_carriageway_width (float): train buffer size of what should be added to the train gauge for total train rail width
 
         Returns:
-            list[OsmElement]: list of only railways as OsmElements with geom_buffered attribute
+            List[OsmElement]: list of only railways as OsmElements with geom_buffered attribute
         """
         rails_polygons = []
         for e in [e for e in elements if e.space_type == 'rail' and not e.access_derived_from == 'inaccessible enclosed area']:
@@ -181,15 +193,15 @@ def get_traffic_areas_as_polygons(elements: list[OsmElement],
     return road_and_rail
 
 
-def get_pedestrian_ways_as_polygons(elements: list[OsmElement], pedestrian_way_default_width: float = 1.6) -> list[OsmElement]:
+def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_default_width: float = 1.6) -> List[OsmElement]:
     """buffers LineString pedestrian ways and returns them together with pedestrian way polygons
 
     Args:
-        elements (list[OsmElement]): list of OsmElements to iterate over and get process pedestrian ways
+        elements (List[OsmElement]): list of OsmElements to iterate over and get process pedestrian ways
         pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffer. Defaults to 1.6.
 
     Returns:
-        list[OsmElement]: list of pedestrian ways as OsmElements with geom_buffered attribute if the original LineString geometry was buffered
+        List[OsmElement]: list of pedestrian ways as OsmElements with geom_buffered attribute if the original LineString geometry was buffered
     """
     for e in elements:
         if e.space_type == 'walking area' and e.is_linestring():
@@ -203,20 +215,20 @@ def get_pedestrian_ways_as_polygons(elements: list[OsmElement], pedestrian_way_d
     return pedestrian_linestrings + pedestrian_polygons
 
 
-def clean_and_smooth_road_and_rail(road_and_rail: list[OsmElement],
-                                   elements: list[OsmElement],
-                                   pedestrian_ways: list[OsmElement],
-                                   inaccessible_enclosed_areas: list[GeometryElement],
-                                   buildings: list[OsmElement],
+def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
+                                   elements: List[OsmElement],
+                                   pedestrian_ways: List[OsmElement],
+                                   inaccessible_enclosed_areas: List[GeometryElement],
+                                   buildings: List[OsmElement],
                                    pedestrian_way_default_width: float = 1.6) -> GeometryElement:
     """merges road and rail geometries, crops it if it intersects with one of the other given elements and smooths the resulting geometry
 
     Args:
-        road_and_rail (list[OsmElement]): list of road and rail OsmElements with geom_buffered attribute or Polygon / MultiPolygon geom attribute
-        elements (list[OsmElement]): list of OsmElements to get specific cropper geometries from
-        pedestrian_ways (list[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute to clip
-        inaccessible_enclosed_areas (list[GeometryElement]): inaccessible enclosed areas to clip
-        buildings (list[OsmElement]): buildings to clip
+        road_and_rail (List[OsmElement]): list of road and rail OsmElements with geom_buffered attribute or Polygon / MultiPolygon geom attribute
+        elements (List[OsmElement]): list of OsmElements to get specific cropper geometries from
+        pedestrian_ways (List[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute to clip
+        inaccessible_enclosed_areas (List[GeometryElement]): inaccessible enclosed areas to clip
+        buildings (List[OsmElement]): buildings to clip
         pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffering buildings. Defaults to 1.6.
 
     Returns:
@@ -226,23 +238,23 @@ def clean_and_smooth_road_and_rail(road_and_rail: list[OsmElement],
         buildings are buffered because it is assumed that every building is surrounded by a pedestrian way
     """
 
-    def get_cropper_geometries(elements: list[OsmElement] = elements,
-                               pedestrian_ways: list[OsmElement] = pedestrian_ways,
-                               inaccessible_enclosed_areas: list[GeometryElement] = inaccessible_enclosed_areas,
-                               buildings: list[OsmElement] = buildings,
-                               pedestrian_way_default_width: float = pedestrian_way_default_width) -> tuple[list[GeometryElement], list[GeometryElement]]:
+    def get_cropper_geometries(elements: List[OsmElement] = elements,
+                               pedestrian_ways: List[OsmElement] = pedestrian_ways,
+                               inaccessible_enclosed_areas: List[GeometryElement] = inaccessible_enclosed_areas,
+                               buildings: List[OsmElement] = buildings,
+                               pedestrian_way_default_width: float = pedestrian_way_default_width) -> Tuple[List[GeometryElement], List[GeometryElement]]:
 
         """combines and returns all geometries that should be used to crop the traffic areas in case they were assumed to wide
 
         Args:
-            elements (list[OsmElement): list of OsmElements with platform elements
-            pedestrian_ways (list[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute
-            inaccessible_enclosed_areas (list[GeometryElement]): list of earlier defined inaccessible_enclosed_areas, because traffic areas will not be accessible there
-            buildings (list[OsmElement): buildings
+            elements (List[OsmElement): list of OsmElements with platform elements
+            pedestrian_ways (List[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute
+            inaccessible_enclosed_areas (List[GeometryElement]): list of earlier defined inaccessible_enclosed_areas, because traffic areas will not be accessible there
+            buildings (List[OsmElement): buildings
             pedestrian_way_default_width (float): assumed default width of pedestrian ways as base for buffering buildings
 
         Returns:
-            tuple[list[GeometryElement], list[GeometryElement]]: list of cropper geomtries, list of polygonized pedestrian ways
+            Tuple[List[GeometryElement], List[GeometryElement]]: list of cropper geomtries, list of polygonized pedestrian ways
         """
         buildings_buffered = buffer_list_of_elements(buildings, buffer_size=pedestrian_way_default_width, join_style='mitre')
         platform_polygons = [e for e in elements if e.space_type == 'public transport stop' and (e.is_polygon() or e.is_multipolygon())]

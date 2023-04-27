@@ -13,10 +13,10 @@ from osm_public_space_mapper.utils.bounding_box import BoundingBox
 
 
 # PARAMETERS TO SET #
-source_filepath = "case_studies/data/Sonnwendviertel.osm.pbf"
-bounding_box = BoundingBox(left=16.37968539797599, right=16.38641304618533, top=48.18240584519986, bottom=48.177909214560884)
+source_filepath = "example_application/vienna-rennweg-to-arenbergpark_20230308.osm.pbf"
+bounding_box = BoundingBox(top=48.1999, left=16.3843, bottom=48.1931, right=16.3977)
 local_crs = pyproj.CRS.from_epsg(3035)  # EPSG 3035 is recommended as default for European Lambert Azimuthal Equal Area, but can be adapted for a more suitable CRS
-target_filepath = "case_studies/Sonnwendviertel.geojson"
+target_filepath = "example_application/public-space-vienna-rennweg-to-arenbergpark.geojson"
 print_status = True  # Should the current analysis step be printed to the terminal?
 
 # CLEANING AND PREPARING DATA #
@@ -53,7 +53,7 @@ dataset, buildings = analyse_space_type.get_and_drop_buildings(dataset)
 # ANALYSING ACCESS #
 if print_status:
     print('Interpreting tags for access')
-analyse_access.interprete_tags(dataset)
+analyse_access.interpret_tags(dataset)
 
 # ANALYSING TRAFFIC AREA #
 if print_status:
@@ -84,7 +84,7 @@ buildings = analyse_space_type.clip_building_passages_from_buildings(buildings, 
 # ANALYSING ACCESS #
 if print_status:
     print('Interpreting barriers - be patient, that may take a while.')
-analyse_access.interprete_barriers(dataset)
+analyse_access.interpret_barriers(dataset)
 if print_status:
     print('Getting inaccessible barriers')
 inaccessible_barriers = analyse_access.get_inaccessible_barriers(dataset)

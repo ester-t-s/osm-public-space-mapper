@@ -1,16 +1,17 @@
 import shapely
 import copy
+from typing import List, Set, Tuple
 from shapely.geometry import Polygon, MultiPolygon
 from osm_public_space_mapper.utils.helpers import buffer_list_of_elements
 from osm_public_space_mapper.utils.osm_element import OsmElement
 from osm_public_space_mapper.utils.geometry_element import GeometryElement
 
 
-def interprete_tags(elements: list[OsmElement]) -> None:
+def interpret_tags(elements: List[OsmElement]) -> None:
     """Iterates over list of OsmElements and updates access attribute to yes, no or restricted based on used tags
 
     Args:
-        elements (list[OsmElement]): list of OsmElements to iterate over
+        elements (List[OsmElement]): list of OsmElements to iterate over
     """
     access_tag_values_yes = ['yes', 'public', 'permissive']
     access_tag_values_no = ['private', 'no', 'permit', 'key', 'military']
@@ -48,28 +49,28 @@ def interprete_tags(elements: list[OsmElement]) -> None:
                         e.access_derived_from = 'tags'
 
 
-def interprete_barriers(elements: list[OsmElement]) -> None:
+def interpret_barriers(elements: List[OsmElement]) -> None:
     """iterates over list of OsmElements and sets access attribute for barriers
 
     Args:
-        elements (list[OsmElement]): list of OsmElements to iterate over
+        elements (List[OsmElement]): list of OsmElements to iterate over
     """
-    def set_access_attribute_on_barrier(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
+    def set_access_attribute_on_barrier(barrier: OsmElement, intersecting_entrances: List[OsmElement]) -> None:
         """sets the access attribute of a barrier based on its intersections with entrances
 
         Args:
             barrier (OsmElement): barrier that is analysed
-            intersecting_entrances (list[OsmElement]): list of entrances that intersect with the barrier
+            intersecting_entrances (List[OsmElement]): list of entrances that intersect with the barrier
 
         Notes:
             the access attribute can not be overwritten, so if it was set earlier and with a more reliable source, e.g. based on an access tag, this step will not influence the value of the access attribute
         """
 
-        def set_access_attribute_of_entrances(intersecting_entrances: list[OsmElement]) -> None:
+        def set_access_attribute_of_entrances(intersecting_entrances: List[OsmElement]) -> None:
             """sets access attribute of the intersecting entrances if it was not set beforehand
 
             Args:
-                intersecting_entrances (list[OsmElement]): list of intersecting entrances
+                intersecting_entrances (List[OsmElement]): list of intersecting entrances
 
             Notes:
                 For gates, default access 'no' is assumed, if no tag indicates something else (which was analysed earlier), because gate counts as a barrier
@@ -90,27 +91,27 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
             """
             barrier.access = intersecting_entrance.access
 
-        def set_barrier_access_attribute_with_multiple_entrances(barrier: OsmElement, intersecting_entrances: list[OsmElement]) -> None:
+        def set_barrier_access_attribute_with_multiple_entrances(barrier: OsmElement, intersecting_entrances: List[OsmElement]) -> None:
             """sets the access attribute of a barrier based on multiple intersecting entrances
 
             Args:
                 barrier (OsmElement): barrier that is analysed
-                intersecting_entrances (list[OsmElement]): list of entrances that intersect with the barrier
+                intersecting_entrances (List[OsmElement]): list of entrances that intersect with the barrier
             """
 
-            def clean_intersecting_entrances(intersecting_entrances: list[OsmElement]) -> list[OsmElement]:
+            def clean_intersecting_entrances(intersecting_entrances: List[OsmElement]) -> List[OsmElement]:
                 """ identifies and drops intersecting entrances that intersect with another intersecting entrance with access = no
 
                 Args:
-                    intersecting_entrances (list[OsmElement]): entrance elements that intersect with the barrier and should be checked
+                    intersecting_entrances (List[OsmElement]): entrance elements that intersect with the barrier and should be checked
 
                 Returns:
-                    list[int]: filtered list of intersecting entrances with access
+                    List[int]: filtered list of intersecting entrances with access
 
                 Notes:
                     e.g. a path might not be tagged with access = private and thus might be interpreted as giving access to a fenced area, but path and fence cross gate with access = private tag
                 """
-                def get_intersection_ids_to_drop(intersecting_entrances: list[OsmElement]) -> set[int]:
+                def get_intersection_ids_to_drop(intersecting_entrances: List[OsmElement]) -> Set[int]:
                     osmids_to_drop = set()
                     for idx, i1 in enumerate(list(intersecting_entrances)):
                         if i1 != intersecting_entrances[-1]:
@@ -121,7 +122,7 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
                                         osmids_to_drop.add(i2.id)
                     return osmids_to_drop
 
-                def drop_inaccessible_intersecting_entrances(intersecting_entrances: list[OsmElement], osmids_to_drop: set[int]) -> list[OsmElement]:
+                def drop_inaccessible_intersecting_entrances(intersecting_entrances: List[OsmElement], osmids_to_drop: Set[int]) -> List[OsmElement]:
                     return [i for i in intersecting_entrances if i.id not in osmids_to_drop]
 
                 intersection_ids_to_drop = get_intersection_ids_to_drop(intersecting_entrances)
@@ -160,27 +161,27 @@ def interprete_barriers(elements: list[OsmElement]) -> None:
         set_access_attribute_on_barrier(barrier, intersecting_entrances)
 
 
-def get_inaccessible_barriers(elements: list[OsmElement]) -> list[OsmElement]:
+def get_inaccessible_barriers(elements: List[OsmElement]) -> List[OsmElement]:
     """returns the elements in list of OsmElements that have access = no and is_barrier() = True
 
     Args:
-        elements (list[OsmElement]): list of OsmElements
+        elements (List[OsmElement]): list of OsmElements
 
     Returns:
-        list[OsmElement]: filtered list
+        List[OsmElement]: filtered list
     """
     return [e for e in elements if e.access == 'no' and e.is_barrier()]
 
 
-def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], buildings: list[OsmElement]) -> list[GeometryElement]:
+def get_inaccessible_enclosed_areas(inaccessible_barriers: List[OsmElement], buildings: List[OsmElement]) -> List[GeometryElement]:
     """returns the polygons / multipolygons that are enclosed by inaccessible barriers and buildings
 
     Args:
-        inaccessible_barriers (list[OsmElement]): list of inaccessible barriers as OsmElements
-        buildings (list[OsmElement]): list of buildings as OsmElements
+        inaccessible_barriers (List[OsmElement]): list of inaccessible barriers as OsmElements
+        buildings (List[OsmElement]): list of buildings as OsmElements
 
     Returns:
-        list[GeometryElement]: list of GeometryElements that are enclosed by inaccessible barriers and buildings
+        List[GeometryElement]: list of GeometryElements that are enclosed by inaccessible barriers and buildings
     """
     buffer_size = 0.001
     barriers_buffered = buffer_list_of_elements(inaccessible_barriers, buffer_size, cap_style='square')
@@ -197,21 +198,21 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: list[OsmElement], bui
     return inaccessible_enclosed_areas
 
 
-def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(elements: list[OsmElement],
-                                                                                    road_and_rail: list[OsmElement],
-                                                                                    pedestrian_ways: list[OsmElement],
-                                                                                    enclosed_areas: list[GeometryElement]) -> tuple((list[OsmElement], list[GeometryElement])):
+def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(elements: List[OsmElement],
+                                                                                    road_and_rail: List[OsmElement],
+                                                                                    pedestrian_ways: List[OsmElement],
+                                                                                    enclosed_areas: List[GeometryElement]) -> Tuple[List[OsmElement], List[GeometryElement]]:
 
-    def crop_road_rail_pedestrian_ways(road_and_rail: list[OsmElement], pedestrian_ways: list[OsmElement], enclosed_areas: list[GeometryElement]) -> tuple((list[OsmElement], list[OsmElement])):
+    def crop_road_rail_pedestrian_ways(road_and_rail: List[OsmElement], pedestrian_ways: List[OsmElement], enclosed_areas: List[GeometryElement]) -> Tuple[List[OsmElement], List[OsmElement]]:
         """crops the geometries of road and rail and pedestrian ways to the parts not intersecting with inaccessible enclosed areas
 
         Args:
-            road_and_rail (list[OsmElement]): list of road and rail elements
-            pedestrian_ways (list[OsmElement]): list of pedestrian way elements
-            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+            road_and_rail (List[OsmElement]): list of road and rail elements
+            pedestrian_ways (List[OsmElement]): list of pedestrian way elements
+            enclosed_areas (List[GeometryElement]): list of inaccessible enclosed areas
 
         Returns:
-            tuple((list[OsmElement], list[OsmElement])): list of cropped road and rail and list of cropped pedestrian ways
+            Tuple[List[OsmElement], List[OsmElement]]: list of cropped road and rail and list of cropped pedestrian ways
         """
         road_and_rail_cropped, pedestrian_ways_cropped = [], []
         enclosed_areas_union = shapely.ops.unary_union([e.geom for e in enclosed_areas])
@@ -227,15 +228,15 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
             pedestrian_ways_cropped.append(e_cropped)
         return road_and_rail_cropped, pedestrian_ways_cropped
 
-    def drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements: list[OsmElement], enclosed_areas: list[GeometryElement]) -> list[GeometryElement]:
+    def drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements: List[OsmElement], enclosed_areas: List[GeometryElement]) -> List[GeometryElement]:
         """iterates over list of inaccessible enclosed areas and list of OsmElements and sets access = no on OsmElements with significant overlap with inaccessible enclosed area
 
         Args:
-            elements (list[OsmElement]): list of OsmElements
-            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+            elements (List[OsmElement]): list of OsmElements
+            enclosed_areas (List[GeometryElement]): list of inaccessible enclosed areas
 
         Returns:
-            list[GeometryElement]: list of inaccessible enclosed areas without the ones with significant overlap with an OsmElement
+            List[GeometryElement]: list of inaccessible enclosed areas without the ones with significant overlap with an OsmElement
         """
         def significant_overlap(enclosed_area: GeometryElement, element: OsmElement) -> bool:
             overlap_threshold = 0.95
@@ -245,7 +246,7 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
                     return True
             return False
 
-        def drop_enclosed_areas_to_ignore(enclosed_areas: list[GeometryElement], enclosed_area_indices_to_ignore: list[int]) -> list[GeometryElement]:
+        def drop_enclosed_areas_to_ignore(enclosed_areas: List[GeometryElement], enclosed_area_indices_to_ignore: List[int]) -> List[GeometryElement]:
             enclosed_areas_cleaned = []
             for idx, area in enumerate(enclosed_areas):
                 if idx not in enclosed_area_indices_to_ignore:
@@ -263,16 +264,16 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
         enclosed_areas_cleaned = drop_enclosed_areas_to_ignore(enclosed_areas, enclosed_area_indices_to_ignore)
         return enclosed_areas_cleaned
 
-    def split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements: list[OsmElement],
-                                                                             enclosed_areas: list[GeometryElement]) -> list[OsmElement]:
+    def split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements: List[OsmElement],
+                                                                             enclosed_areas: List[GeometryElement]) -> List[OsmElement]:
         """iterates over list of OsmElements and splits them if they intersect with inaccessible enclosed area into the accessible and the inaccessible part
 
         Args:
-            elements (list[OsmElement]): list of OsmElements to check and split
-            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+            elements (List[OsmElement]): list of OsmElements to check and split
+            enclosed_areas (List[GeometryElement]): list of inaccessible enclosed areas
 
         Returns:
-            list[OsmElement]: list of split up OsmElements
+            List[OsmElement]: list of split up OsmElements
 
         Notes:
             intersection geometry is only returned if it is a Polygon or a MultiPolygon and not a LineString, Point or GeometryCollection
@@ -300,16 +301,16 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
                 elements_split.append(element)
         return elements_split
 
-    def crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements: list[OsmElement],
-                                                                            enclosed_areas: list[GeometryElement]) -> list[GeometryElement]:
+    def crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements: List[OsmElement],
+                                                                            enclosed_areas: List[GeometryElement]) -> List[GeometryElement]:
         """iterates over list of inaccessible enclosed areas and returns the cropped geometry if it intersects with an OsmElement
 
         Args:
-            elements (list[OsmElement]): list of OsmElements
-            enclosed_areas (list[GeometryElement]): list of inaccessible enclosed areas
+            elements (List[OsmElement]): list of OsmElements
+            enclosed_areas (List[GeometryElement]): list of inaccessible enclosed areas
 
         Returns:
-            list[GeometryElement]: list of cropped or original inaccessible enclosed areas
+            List[GeometryElement]: list of cropped or original inaccessible enclosed areas
 
         Notes:
             only returns the cropped inaccessible enclosed area if it is not an empty geometry and is of significant size (2 square metre)
@@ -337,7 +338,7 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
     return elements_split, road_and_rail_cropped, pedestrian_ways_cropped, enclosed_areas_cropped
 
 
-def drop_linestring_barriers_and_entrance_points(elements: list[OsmElement]) -> list[OsmElement]:
+def drop_linestring_barriers_and_entrance_points(elements: List[OsmElement]) -> List[OsmElement]:
     for e in elements:
         if e.has_tag('barrier') and e.is_linestring():
             e.ignore = True
@@ -346,12 +347,12 @@ def drop_linestring_barriers_and_entrance_points(elements: list[OsmElement]) -> 
     return [e for e in elements if not e.ignore]
 
 
-def assume_access_based_on_space_type(elements: list[OsmElement]) -> None:
+def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
     """sets the access of OsmElements based on a give space_type if access is not set yet and space_type is given.
         also sets access to no for all elements with space_type parking, even if it is set differently already
 
     Args:
-        elements (list[OsmElement]): list of OsmElements
+        elements (List[OsmElement]): list of OsmElements
     """
     space_types_with_access = ['public transport stop', 'park', 'playground', 'dog_park', 'place', 'fitness_station',
                                'square', 'track', 'brownfield', 'bus_station', 'forest', 'sand', 'garden', 'heath',

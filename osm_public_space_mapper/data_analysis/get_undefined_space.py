@@ -1,16 +1,19 @@
 from osm_public_space_mapper.utils.osm_element import OsmElement
 from osm_public_space_mapper.utils.geometry_element import GeometryElement
 from osm_public_space_mapper.utils.bounding_box import BoundingBox
+from typing import List, TypeAlias
 import shapely
-from shapely.geometry import LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
-ShapelyGeometry = LinearRing | Polygon | MultiPolygon | Point | MultiPoint | LineString | MultiLineString
+from shapely.geometry import (
+    LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
+)
+ShapelyGeometry: TypeAlias = LinearRing | Polygon | MultiPolygon | Point | MultiPoint | LineString | MultiLineString
 
 
-def load(all_defined_space: list[OsmElement | GeometryElement], bbox: BoundingBox) -> GeometryElement:
+def load(all_defined_space: List[OsmElement | GeometryElement], bbox: BoundingBox) -> GeometryElement:
     """returns space that is not part of all defined space as a Polygon
 
     Args:
-        all_defined_space (dict[str,list[OsmElement | GeometryElement]]): dictionary of all lists with defined space
+        all_defined_space (List[OsmElement | GeometryElement]): list of all lists with defined space
         bbox (BoundingBox): BoundingBox in which the undefined space should be loaded
 
     Returns:

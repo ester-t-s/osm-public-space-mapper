@@ -1,17 +1,20 @@
-from shapely.geometry import LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
+from shapely.geometry import (
+    LinearRing, Polygon, MultiPolygon, Point, MultiPoint, LineString, MultiLineString
+)
 import esy.osm.shape
 from osm_public_space_mapper.utils.geometry_element import GeometryElement
+from typing import Dict, Tuple, TypeAlias
+
+ShapelyGeometry: TypeAlias = LinearRing | Polygon | MultiPolygon | Point | MultiPoint | LineString | MultiLineString
 
 
 class OsmElement(GeometryElement):
 
-    ShapelyGeometry = LinearRing | Polygon | MultiPolygon | Point | MultiPoint | LineString | MultiLineString
-
-    def __init__(self, attr: tuple[ShapelyGeometry | esy.osm.shape.shape.Invalid, int, dict]) -> None:
+    def __init__(self, attr: Tuple[ShapelyGeometry | esy.osm.shape.shape.Invalid, int, dict]) -> None:
         """Creates an object of the class OsmElement with private attributes geom, id, tags, space_type, access and ignore
 
         Args:
-            attr (tuple[ShapelyGeometry  |  esy.osm.shape.shape.Invalid, int, dict]): Attributes of the OsmElement as a tuple with geometry, id and tags as returned by esy.osm.shape
+            attr (Tuple[ShapelyGeometry  |  esy.osm.shape.shape.Invalid, int, dict]): Attributes of the OsmElement as a tuple with geometry, id and tags as returned by esy.osm.shape
 
         Raises:
             TypeError: raised if attr are not given as tuple with three elements
@@ -33,7 +36,7 @@ class OsmElement(GeometryElement):
     def _get_tags(self) -> dict:
         return self.__tags
 
-    def _set_tags(self, t: dict[str, str]):
+    def _set_tags(self, t: Dict[str, str]):
         if type(t) == dict:
             self.__tags = t
         else:
@@ -44,7 +47,7 @@ class OsmElement(GeometryElement):
         """Returns if the element has a specific tag
 
         Args:
-            tag (str): tag that should be checked for occurence
+            tag (str): tag that should be checked for occurrence
 
         Returns:
             bool: True if the element has that tag
