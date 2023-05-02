@@ -249,6 +249,18 @@ def drop_road_rail_walking(elements: List[OsmElement]) -> List[OsmElement]:
     return [e for e in elements if e.space_type not in ['road', 'rail', 'walking area']]
 
 
+def clip_building_passages_from_buildings(buildings: List[OsmElement], traffic_elements: List[OsmElement]) -> List[OsmElement]:
+    building_passages = []
+    for e in traffic_elements:
+        if e.is_building_passage() and (e.access is None or e.access == 'yes'):
+            building_passages.append(e.geom)
+    building_passages_union = shapely.ops.unary_union(building_passages)
+    for b in buildings:
+        if b.geom.intersects(building_passages_union):
+            b.geom = b.geom.difference(building_passages_union)
+    return [b for b in buildings if not b.geom.is_empty]
+
+
 def set_space_category(elements: List[OsmElement | GeometryElement]) -> List[OsmElement | GeometryElement]:
     categories = {'greenspace': ['dog_park', 'flowerbed', 'grass', 'park', 'sand', 'village_green', 'garden',
                                  'grassland', 'scrub', 'meadow', 'wood', 'allotments', 'beach', 'recreation_ground',
