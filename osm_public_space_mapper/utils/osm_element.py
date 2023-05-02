@@ -178,3 +178,13 @@ class OsmElement(GeometryElement):
             bool: returns true if element is identified as rail
         """
         return any([self.tags.get('railway') in ['tram', 'rail'], self.tags.get('landuse') == 'railway'])
+
+    def is_construction(self) -> bool:
+        if any([self.has_tag('construction'),
+                self.has_tag('construction:highway'),
+                self.tags.get('landuse') == 'construction',
+                self.tags.get('highway') == 'construction',
+                self.tags.get('railway') == 'construction']):
+            return True
+        else:
+            return False
