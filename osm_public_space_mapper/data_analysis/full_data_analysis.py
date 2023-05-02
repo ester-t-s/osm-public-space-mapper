@@ -79,9 +79,9 @@ dataset = clean_data.drop_road_rail_walking(dataset)
 # CLEANING BUILDINGS #
 if print_status:
     print('Clipping building passages from buildings')
-buildings = analyse_space_type.clip_building_passages_from_buildings(buildings, road_and_rail+pedestrian_ways)
+buildings = clean_data.clip_building_passages_from_buildings(buildings, road_and_rail+pedestrian_ways)
 
-# ANALYSING ACCESS #
+# ANALYSING ACCESS THROUGH BARRIERS#
 if print_status:
     print('Interpreting barriers - be patient, that may take a while.')
 analyse_access.interpret_barriers(dataset)
@@ -100,7 +100,7 @@ if print_status:
 dataset = analyse_access.drop_linestring_barriers_and_entrance_points(dataset)
 
 # CLEANING TRAFFIC AREA #
-road_and_rail = analyse_traffic_area.clean_and_smooth_road_and_rail(road_and_rail, dataset, pedestrian_ways, inaccessible_enclosed_areas, buildings, local_var.pedestrian_way_default_width)
+road_and_rail = analyse_traffic_area.clean_and_smooth_road_and_rail(road_and_rail, dataset, pedestrian_ways, buildings, local_var.pedestrian_way_default_width)
 
 # CLEANING DATA #
 if print_status:
@@ -132,7 +132,7 @@ if print_status:
 all_defined_space = clean_data.merge_elements_with_identical_attributes(all_defined_space)
 
 if print_status:
-    print('Clipping overlapping polygons - be patient, that may take a while.')
+    print('Cropping overlapping polygons - be patient, that may take a while.')
 all_defined_space = clean_data.crop_overlapping_polygons(all_defined_space)
 
 # PREPARING FOR EXPORT #
