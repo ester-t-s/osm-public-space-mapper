@@ -24,6 +24,7 @@ def set_traffic_space_type(elements: List[OsmElement]):
             e.access = ('no', 'overwrite_yes')
         elif e.is_rail():
             e.space_type = 'rail'
+            e.access = ('no', 'overwrite_yes')
         elif e.has_tag('highway'):
             e.space_type = 'road'
 
@@ -152,7 +153,7 @@ def get_traffic_areas_as_polygons(elements: List[OsmElement],
                 element.width = estimate_road_width(element, highway_default_widths, cycleway_default_widths)
 
         highways_polygons = []
-        for e in [e for e in elements if e.space_type == 'road' and not e.access_derived_from == 'inaccessible enclosed area']:
+        for e in [e for e in elements if e.space_type == 'road']:
             if e.is_linestring():
                 set_road_width(e, highway_default_widths, cycleway_default_widths)
                 cap_style = 'square' if e.is_building_passage() else 'flat'
@@ -176,7 +177,7 @@ def get_traffic_areas_as_polygons(elements: List[OsmElement],
             List[OsmElement]: list of only railways as OsmElements with geom_buffered attribute
         """
         rails_polygons = []
-        for e in [e for e in elements if e.space_type == 'rail' and not e.access_derived_from == 'inaccessible enclosed area']:
+        for e in [e for e in elements if e.space_type == 'rail']:
             if e.tags.get('railway') == 'tram':
                 e.width = tram_gauge + tram_additional_carriageway_width
             elif e.tags.get('railway') == 'rail':  # ignore subway because assume it's underground
@@ -218,7 +219,6 @@ def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_d
 def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
                                    elements: List[OsmElement],
                                    pedestrian_ways: List[OsmElement],
-                                   inaccessible_enclosed_areas: List[GeometryElement],
                                    buildings: List[OsmElement],
                                    pedestrian_way_default_width: float = 1.6) -> GeometryElement:
     """merges road and rail geometries, crops it if it intersects with one of the other given elements and smooths the resulting geometry
@@ -227,7 +227,6 @@ def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
         road_and_rail (List[OsmElement]): list of road and rail OsmElements with geom_buffered attribute or Polygon / MultiPolygon geom attribute
         elements (List[OsmElement]): list of OsmElements to get specific cropper geometries from
         pedestrian_ways (List[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute to clip
-        inaccessible_enclosed_areas (List[GeometryElement]): inaccessible enclosed areas to clip
         buildings (List[OsmElement]): buildings to clip
         pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffering buildings. Defaults to 1.6.
 
@@ -240,7 +239,6 @@ def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
 
     def get_cropper_geometries(elements: List[OsmElement] = elements,
                                pedestrian_ways: List[OsmElement] = pedestrian_ways,
-                               inaccessible_enclosed_areas: List[GeometryElement] = inaccessible_enclosed_areas,
                                buildings: List[OsmElement] = buildings,
                                pedestrian_way_default_width: float = pedestrian_way_default_width) -> Tuple[List[GeometryElement], List[GeometryElement]]:
 
@@ -249,7 +247,6 @@ def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
         Args:
             elements (List[OsmElement): list of OsmElements with platform elements
             pedestrian_ways (List[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute
-            inaccessible_enclosed_areas (List[GeometryElement]): list of earlier defined inaccessible_enclosed_areas, because traffic areas will not be accessible there
             buildings (List[OsmElement): buildings
             pedestrian_way_default_width (float): assumed default width of pedestrian ways as base for buffering buildings
 
@@ -258,7 +255,7 @@ def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
         """
         buildings_buffered = buffer_list_of_elements(buildings, buffer_size=pedestrian_way_default_width, join_style='mitre')
         platform_polygons = [e for e in elements if e.space_type == 'public transport stop' and (e.is_polygon() or e.is_multipolygon())]
-        cropper_geometries = pedestrian_ways + buildings_buffered + platform_polygons + inaccessible_enclosed_areas
+        cropper_geometries = pedestrian_ways + buildings_buffered + platform_polygons
         return cropper_geometries
 
     def smooth_road_and_rail(road_and_rail_cropped: GeometryElement) -> GeometryElement:
