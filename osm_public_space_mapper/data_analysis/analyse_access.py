@@ -255,7 +255,7 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
 
         enclosed_area_indices_to_ignore = []
         for idx, enclosed_area in enumerate(enclosed_areas):
-            for element in elements:
+            for element in [e for e in elements if e.is_polygon() or e.is_multipolygon()]:
                 if significant_overlap(enclosed_area, element):
                     element.access = 'no'
                     element.access_derived_from = 'inaccessible enclosed area'
@@ -294,7 +294,8 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
                         element_difference.geom = element.geom.difference(enclosed_areas_union)
                         element_intersects = True
             if element_intersects:
-                elements_split.append(element_intersection)
+                if not element_intersection.geom.is_empty:
+                    elements_split.append(element_intersection)
                 if not element_difference.geom.is_empty:
                     elements_split.append(element_difference)
             else:
@@ -368,6 +369,7 @@ def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
                                   'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery',
                                   'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir', 'meadow'
                                   ]
+    uncategorized_space_types = []
     for element in [e for e in elements if e.access is None and e.space_type is not None]:
         if element.space_type in space_types_with_access:
             element.access = 'yes'
@@ -379,4 +381,7 @@ def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
             element.access = 'no'
             element.access_derived_from = 'space type'
         if not element.access:
-            print('No access categorized for', element.space_type)
+            uncategorized_space_types.append(element.space_type)
+            element.access = 'undefined'
+    if len(uncategorized_space_types) > 0:
+        print('No access categorized for', set(uncategorized_space_types), 'You should consider adding it to the function analyse_access.assume_access_based_on_space_type()')
