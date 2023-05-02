@@ -254,7 +254,7 @@ def drop_irrelevant_elements_based_on_tags(elements: List[OsmElement]) -> List[O
                 e.ignore = True
         return [e for e in elements if not e.ignore]
 
-    elements = drop_elements_non_groundlevel([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
+    elements = drop_elements_non_groundlevel(elements)
     elements = drop_elements_without_relevant_tag([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
     elements = drop_elements_with_irrelevant_tag([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
     elements = drop_elements_with_irrelevant_tag_value([e for e in elements if not e.is_building()]) + [e for e in elements if e.is_building()]
@@ -290,13 +290,16 @@ def set_space_category(elements: List[OsmElement | GeometryElement]) -> List[Osm
                   'walking area': ['walking area'],
                   'construction': ['construction']
                   }
+    uncategorized_space_types = []
     for e in elements:
         for category, space_types in categories.items():
             if e.space_type in space_types:
                 e.space_category = category
         if not e.space_category:
-            print('uncategorized space type:', e.space_type)
             e.space_category = e.space_type
+            uncategorized_space_types.append(e.space_type)
+    if len(uncategorized_space_types) > 0:
+        print('No space category given for', set(uncategorized_space_types), 'You should consider adding it to the function clean_data.set_space_category()')
     return elements
 
 
@@ -401,12 +404,17 @@ def crop_defined_space_to_bounding_box(all_defined_space: List[OsmElement | Geom
         else:
             e_cropped = copy.deepcopy(element)
             e_cropped.geom = bbox.geom_projected.intersection(e_cropped.geom)
-            return e_cropped
+            if not e_cropped.geom.is_empty:
+                return e_cropped
+            else:
+                return 'empty cropped geometry'
 
     all_defined_space_cropped = []
     for element in all_defined_space:
         if intersects_bounding_box(element):
-            all_defined_space_cropped.append(crop_element_to_bounding_box(element))
+            element_cropped = crop_element_to_bounding_box(element)
+            if not element_cropped == 'empty cropped geometry':
+                all_defined_space_cropped.append(element_cropped)
     return all_defined_space_cropped
 
 
