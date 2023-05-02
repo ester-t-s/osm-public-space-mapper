@@ -12,9 +12,9 @@ def get_and_drop_buildings(elements: List[OsmElement]) -> Tuple[List[OsmElement]
         Tuple[List[OsmElement], List[OsmElement]]: given list without buildings and buildings as separate list
     """
     buildings = [e for e in elements if e.is_building()]
-    for b in buildings:
-        b.space_type = 'building'
-        b.access = 'no'
+    for building in buildings:
+        building.space_type = 'building'
+        building.access = 'undefined'
     elements = [e for e in elements if not e.is_building()]
     return elements, buildings
 
