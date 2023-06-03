@@ -31,17 +31,15 @@ def save2geojson(all_defined_space: List[OsmElement | GeometryElement],
     """
     def write_info_to_dict(all_defined_space: List[OsmElement | GeometryElement], undefined_space_within_bbox: GeometryElement) -> Dict:
         projector = pyproj.Transformer.from_crs(local_crs, pyproj.CRS.from_epsg(4326), always_xy=True)
-        geometries, access, space_category, viz_category = [], [], [], []
+        geometries, access, space_category = [], [], []
         for element in all_defined_space:
             geometries.append(shapely.ops.transform(projector.transform, element.geom))
             access.append(element.access)
             space_category.append(element.space_category)
-            viz_category.append(element.space_category + '-' + element.access)
         geometries.append(shapely.ops.transform(projector.transform, undefined_space_within_bbox.geom))
         access.append(undefined_space_within_bbox.access)
         space_category.append(undefined_space_within_bbox.space_category)
-        viz_category.append(undefined_space_within_bbox.space_category + '-' + undefined_space_within_bbox.access)
-        data = {'geometry': geometries, 'access': access, 'space_category': space_category, 'viz_category': viz_category}
+        data = {'geometry': geometries, 'access': access, 'space_category': space_category}
         return data
     data = write_info_to_dict(all_defined_space, undefined_space_within_bbox)
     gdf = gpd.GeoDataFrame(data)
