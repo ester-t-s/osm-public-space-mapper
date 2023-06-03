@@ -156,8 +156,7 @@ def get_traffic_areas_as_polygons(elements: List[OsmElement],
         for e in [e for e in elements if e.space_type == 'road']:
             if e.is_linestring():
                 set_road_width(e, highway_default_widths, cycleway_default_widths)
-                cap_style = 'square' if e.is_building_passage() else 'flat'
-                e.geom = e.geom.buffer(distance=round(e.width/2, 1), cap_style=cap_style)
+                e.geom = e.geom.buffer(distance=round(e.width/2, 1), cap_style='square')
                 highways_polygons.append(e)
             elif e.is_polygon() or e.is_multipolygon():
                 highways_polygons.append(e)
@@ -206,8 +205,10 @@ def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_d
     """
     for e in elements:
         if e.space_type == 'walking area' and e.is_linestring():
-            cap_style = 'square' if e.is_building_passage() else 'flat'  # differentiate for cleaner visualization
-            e.geom = e.geom.buffer(distance=pedestrian_way_default_width/2, cap_style=cap_style)
+            if e.tags.get('highway') == 'living_street':
+                e.geom = e.geom.buffer(distance=pedestrian_way_default_width, cap_style='square')  # living streets count as walking area but are significantly wider than sidewalks / paths
+            else:
+                e.geom = e.geom.buffer(distance=pedestrian_way_default_width/2, cap_style='square')
     pedestrian_linestrings = [e for e in elements if e.space_type == 'walking area' and e.is_linestring()]
     pedestrian_polygons = [e for e in elements if e.space_type == 'walking area' and (e.is_multipolygon() or e.is_polygon())]
     """for p in pedestrian_polygons + pedestrian_linestrings:
