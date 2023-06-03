@@ -95,6 +95,7 @@ if print_status:
     print('Splitting elements if they overlap with inaccessible enclosed area and assign access - be patient, that may take a while.')
 dataset, road_and_rail, pedestrian_ways, inaccessible_enclosed_areas = analyse_access.compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(dataset, road_and_rail, pedestrian_ways, inaccessible_enclosed_areas)
 
+# CLEANING DATA #
 if print_status:
     print('Dropping linestring barriers and entrance points from dataset')
 dataset = clean_data.drop_linestring_barriers_and_entrance_points(dataset)
@@ -143,6 +144,9 @@ all_defined_space_cropped = clean_data.crop_defined_space_to_bounding_box(all_de
 if print_status:
     print('Getting undefined space within bounding box - be patient, that may take a while.')
 undefined_space_within_bbox = get_undefined_space.load(all_defined_space_cropped, bounding_box)
+
+# CHECK COMPLETENESS#
+export_data.check_completeness(all_defined_space_cropped, undefined_space_within_bbox, bounding_box)
 
 # EXPORTING #
 if print_status:
