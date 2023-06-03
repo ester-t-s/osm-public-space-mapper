@@ -4,6 +4,17 @@ import shapely
 from typing import List, Dict
 from osm_public_space_mapper.utils.geometry_element import GeometryElement
 from osm_public_space_mapper.utils.osm_element import OsmElement
+from osm_public_space_mapper.utils.bounding_box import BoundingBox
+
+
+def check_completeness(all_defined_space: List[OsmElement | GeometryElement],
+                       undefined_space_within_bbox: GeometryElement,
+                       bbox: BoundingBox) -> None:
+    all_space = [e.geom for e in all_defined_space + [undefined_space_within_bbox]]
+    assert bbox.geom_projected.difference(shapely.ops.unary_union(all_space)).area < 0.01
+    for element in all_defined_space + [undefined_space_within_bbox]:
+        assert element.space_category is not None
+        assert element.access is not None
 
 
 def save2geojson(all_defined_space: List[OsmElement | GeometryElement],
