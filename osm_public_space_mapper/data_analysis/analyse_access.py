@@ -14,7 +14,7 @@ def interpret_tags(elements: List[OsmElement]) -> None:
         elements (List[OsmElement]): list of OsmElements to iterate over
     """
     access_tag_values_yes = ['yes', 'public', 'permissive']
-    access_tag_values_no = ['private', 'no', 'permit', 'key', 'military']
+    access_tag_values_no = ['private', 'no', 'permit', 'key', 'military', 'residents']
     access_tag_values_restricted = ['children', 'customers']
     restricted_access_tags = ['fee', 'opening_hours', 'max_age', 'min_age', 'female', 'male', 'charge', 'seasonal']
 
