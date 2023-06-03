@@ -211,9 +211,6 @@ def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_d
                 e.geom = e.geom.buffer(distance=pedestrian_way_default_width/2, cap_style='square')
     pedestrian_linestrings = [e for e in elements if e.space_type == 'walking area' and e.is_linestring()]
     pedestrian_polygons = [e for e in elements if e.space_type == 'walking area' and (e.is_multipolygon() or e.is_polygon())]
-    """for p in pedestrian_polygons + pedestrian_linestrings:
-        p.access = 'yes'  # if not set beforehand
-        p.access_derived_from = 'space type'"""
     return pedestrian_linestrings + pedestrian_polygons
 
 
