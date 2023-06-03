@@ -250,15 +250,15 @@ def clip_building_passages_from_buildings(buildings: List[OsmElement], traffic_e
 
 
 def set_space_category(elements: List[OsmElement | GeometryElement]) -> List[OsmElement | GeometryElement]:
-    categories = {'greenspace': ['dog_park', 'flowerbed', 'grass', 'park', 'sand', 'village_green', 'garden',
+    categories = {'greenspace': ['dog_park', 'flowerbed', 'grass', 'park', 'sand', 'village_green', 'garden', 'planter',
                                  'grassland', 'scrub', 'meadow', 'wood', 'allotments', 'beach', 'recreation_ground',
-                                 'islet', 'forest', 'heath', 'nature_reserve', 'greenfield'],
+                                 'islet', 'forest', 'heath', 'nature_reserve', 'greenfield', 'shrubbery'],
                   'play and sports': ['playground', 'pitch', 'fitness_station', 'track', 'miniature_golf', 'horse_riding'],
                   'water': ['fountain', 'water', 'wetland', 'swimming_pool'],
                   'traffic area': ['parking', 'traffic area'],
                   'open space': ['public transport stop', 'square', 'scree', 'bridge', 'pier', 'marina', 'outdoor_seating', 'biergarten'],
                   'building': ['building'],
-                  'undefined space': ['undefined space'],
+                  'inaccessible enclosed area': ['inaccessible enclosed area'],
                   'walking area': ['walking area'],
                   'construction': ['construction']
                   }
@@ -339,7 +339,7 @@ def crop_overlapping_polygons(elements: List[OsmElement | GeometryElement]) -> L
     clip_category_from_elements(elements, category_to_clip='building')
     clip_category_from_elements(elements, category_to_clip='construction')
     clip_category_from_elements(elements, category_to_clip='water')
-    clip_category_from_elements(elements, category_to_clip='undefined space', categories_to_crop=['traffic area', 'open space', 'walking area'])  # undefined space at this point are only the inaccessible enclosed areas
+    clip_category_from_elements(elements, category_to_clip='inaccessible enclosed area', categories_to_crop=['traffic area'])
     clip_category_from_elements(elements, category_to_clip='walking area', categories_to_crop=['greenspace', 'play and sports'])
     clip_category_from_elements(elements, category_to_clip='play and sports')
     clip_category_from_elements(elements, category_to_clip='greenspace')
