@@ -96,16 +96,14 @@ if print_status:
 dataset, road_and_rail, pedestrian_ways, inaccessible_enclosed_areas = analyse_access.compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(dataset, road_and_rail, pedestrian_ways, inaccessible_enclosed_areas)
 
 if print_status:
-    print('Dropping LineString elements with barrier tag and entrance points from dataset')
-dataset = analyse_access.drop_linestring_barriers_and_entrance_points(dataset)
+    print('Dropping linestring barriers and entrance points from dataset')
+dataset = clean_data.drop_linestring_barriers_and_entrance_points(dataset)
+if print_status:
+    print('Dropping leftover linestrings from dataset')
+dataset = clean_data.drop_all_linestrings(dataset)
 
 # CLEANING TRAFFIC AREA #
 road_and_rail = analyse_traffic_area.clean_and_smooth_road_and_rail(road_and_rail, dataset, pedestrian_ways, buildings, local_var.pedestrian_way_default_width)
-
-# CLEANING DATA #
-if print_status:
-    print('Dropping linestrings from dataset')
-dataset = clean_data.drop_linestrings(dataset)
 
 # SETTING MISSING SPACE TYPE AND GUESSING MISSING ACCESS #
 if print_status:

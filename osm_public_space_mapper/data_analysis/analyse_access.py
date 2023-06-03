@@ -352,15 +352,6 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
     return elements_split, road_and_rail_cropped, pedestrian_ways_cropped, enclosed_areas_cropped
 
 
-def drop_linestring_barriers_and_entrance_points(elements: List[OsmElement]) -> List[OsmElement]:
-    for e in elements:
-        if e.has_tag('barrier') and e.is_linestring():
-            e.ignore = True
-        elif e.is_entrance() and e.is_point():
-            e.ignore = True
-    return [e for e in elements if not e.ignore]
-
-
 def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
     """sets the access of OsmElements based on a give space_type if access is not set yet and space_type is given.
         also sets access to no for all elements with space_type parking, even if it is set differently already

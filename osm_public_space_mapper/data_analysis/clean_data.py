@@ -418,7 +418,7 @@ def crop_defined_space_to_bounding_box(all_defined_space: List[OsmElement | Geom
     return all_defined_space_cropped
 
 
-def drop_linestrings(elements: List[OsmElement]) -> List[OsmElement]:
+def drop_all_linestrings(elements: List[OsmElement]) -> List[OsmElement]:
     """returns only the elements that are not LineStrings
 
     Args:
@@ -432,6 +432,15 @@ def drop_linestrings(elements: List[OsmElement]) -> List[OsmElement]:
         For now, all linestrings are dropped (roads, rail and paths are saved as polygons separately)
     """
     return [e for e in elements if not e.is_linestring()]
+
+
+def drop_linestring_barriers_and_entrance_points(elements: List[OsmElement]) -> List[OsmElement]:
+    for e in elements:
+        if e.has_tag('barrier') and e.is_linestring():
+            e.ignore = True
+        elif e.is_entrance() and e.is_point():
+            e.ignore = True
+    return [e for e in elements if not e.ignore]
 
 
 def drop_elements_with_undefined_space_type(elements: List[OsmElement]) -> List[OsmElement]:
