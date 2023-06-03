@@ -132,7 +132,7 @@ def interpret_barriers(elements: List[OsmElement]) -> None:
             intersecting_entrances_cleaned = clean_intersecting_entrances(intersecting_entrances)
             has_access_point = False
             for i in intersecting_entrances_cleaned:
-                if i.access == 'yes' or i.access is None:
+                if i.access == 'yes':
                     has_access_point = True
                     break
                 elif i.access == 'restricted':
