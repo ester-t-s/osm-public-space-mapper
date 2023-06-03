@@ -355,19 +355,19 @@ def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
     Args:
         elements (List[OsmElement]): list of OsmElements
     """
-    space_types_with_access = ['public transport stop', 'park', 'playground', 'dog_park', 'place', 'fitness_station',
+    space_types_with_access = ['public transport stop', 'park', 'playground', 'dog_park', 'fitness_station',
                                'square', 'track', 'brownfield', 'bus_station', 'forest', 'sand', 'garden', 'heath',
-                               'greenhouse_horticulture', 'meadow', 'nature_reserve', 'recreation_ground', 'scree',
-                               'scrub', 'village_green', 'wood', 'cemetery', 'grass', 'pitch', 'beach', 'bridge',
-                               'common',  'island', 'marina', 'pier', 'water_park', 'religious', 'shelter', 'grassland',
-                               'greenfield', 'walking area'
+                               'recreation_ground', 'scree', 'greenfield', 'walking area', 'grassland',
+                               'village_green', 'wood', 'cemetery', 'grass', 'pitch', 'beach', 'bridge',
+                               'common',  'island', 'marina', 'pier', 'water_park', 'religious', 'shelter'
                                ]
     space_types_with_restricted_access = ['outdoor_seating', 'sports_centre', 'swimming_pool', 'biergarten',
                                           'miniature_golf', 'stadium', 'horse_riding'
                                           ]  # because usually linked to comsumption / fees / hours which might not be recorded in OSM
-    space_types_without_access = ['allotments', 'construction', 'landfill', 'military', 'railway', 'flowerbed', 'fountain',
-                                  'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery',
-                                  'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir', 'meadow'
+    space_types_without_access = ['allotments', 'construction', 'landfill', 'military', 'flowerbed', 'fountain',
+                                  'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery', 'planter'
+                                  'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir', 'scrub', 'shrubbery',
+                                  'greenhouse_horticulture', 'meadow', 'nature_reserve'
                                   ]
     uncategorized_space_types = []
     for element in [e for e in elements if e.access is None and e.space_type is not None]:
