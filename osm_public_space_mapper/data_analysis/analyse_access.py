@@ -228,7 +228,20 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
             pedestrian_ways_cropped.append(e_cropped)
         return road_and_rail_cropped, pedestrian_ways_cropped
 
-    def drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements: List[OsmElement], enclosed_areas: List[GeometryElement]) -> List[GeometryElement]:
+    def assign_access_for_elements_in_enclosed_areas(elements: List[OsmElement], enclosed_areas: List[GeometryElement]) -> None:
+        """iterates over list of OsmElements and sets access = no if it is within enclosed areas
+
+        Args:
+            elements (List[OsmElement]): list of OsmElement
+            enclosed_areas (List[GeometryElement]): list of enclosed areas
+        """
+        enclosed_areas_union = shapely.ops.unary_union([e.geom for e in enclosed_areas])
+        for element in elements:
+            if enclosed_areas_union.contains(element.geom):
+                element.access = 'no'
+                element.access_derived_from = 'inaccessible enclosed area'
+
+    def drop_inaccessible_enclosed_areas_with_significant_overlap_and_assign_access_attribute(elements: List[OsmElement], enclosed_areas: List[GeometryElement]) -> List[GeometryElement]:
         """iterates over list of inaccessible enclosed areas and list of OsmElements and sets access = no on OsmElements with significant overlap with inaccessible enclosed area
 
         Args:
@@ -332,7 +345,7 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
         return enclosed_areas_cropped
 
     road_and_rail_cropped, pedestrian_ways_cropped = crop_road_rail_pedestrian_ways(road_and_rail, pedestrian_ways, enclosed_areas)
-    enclosed_areas_cleaned = drop_inaccessible_enclosed_areas_with_significant_overlap_and_transfer_access_attribute(elements, enclosed_areas)
+    enclosed_areas_cleaned = drop_inaccessible_enclosed_areas_with_significant_overlap_and_assign_access_attribute(elements, enclosed_areas)
     elements_split = split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements, enclosed_areas_cleaned)
     enclosed_areas_cropped = crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements, enclosed_areas_cleaned)
 
