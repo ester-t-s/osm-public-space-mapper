@@ -40,10 +40,10 @@ def get_traffic_areas_as_polygons(elements: List[OsmElement],
         """iterates over list of OsmElements and buffers highways if LineString and thus transforms them to Polygons based on given or estimated width and returns them in a list
 
         Args:
-            elements (List[OsmElement]): list of OsmElements to iterate over and set geom_buffered attribute
+            elements (List[OsmElement]): list of OsmElements to iterate over and buffer
 
         Returns:
-            List[OsmElement]: list of only highways as OsmElements with geom_buffered attribute
+            List[OsmElement]: list of only highways as OsmElements with buffered geometries
         """
         def set_road_width(element: OsmElement,
                            highway_default_widths: dict[str, Tuple[float, float]] = {
@@ -167,14 +167,14 @@ def get_traffic_areas_as_polygons(elements: List[OsmElement],
         """iterates over list of OsmElements and buffers railways and thus transforms the LineStrings to Polygons based on tram and train gauge and buffer size
 
         Args:
-            elements (List[OsmElement]): list of OsmElements to iterate over and set geom_buffered attribute if applicable
+            elements (List[OsmElement]): list of OsmElements to iterate over and buffer if railway LineString
             tram_gauge (float): tram gauge. Defaults to 1.435
             tram_additional_carriageway_width (float): tram buffer size of what should be added to the tram gauge for total tram rail width
             train_gauge (float): train gauge. Defaults to 1.435
             train_additional_carriageway_width (float): train buffer size of what should be added to the train gauge for total train rail width
 
         Returns:
-            List[OsmElement]: list of only railways as OsmElements with geom_buffered attribute
+            List[OsmElement]: list of only railways as OsmElements with buffered geometries
         """
         rails_polygons = []
         for e in [e for e in elements if e.space_type == 'rail']:
@@ -202,7 +202,7 @@ def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_d
         pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffer. Defaults to 1.6.
 
     Returns:
-        List[OsmElement]: list of pedestrian ways as OsmElements with geom_buffered attribute if the original LineString geometry was buffered
+        List[OsmElement]: list of pedestrian ways as OsmElements with Polygon geometries
     """
     for e in elements:
         if e.space_type == 'walking area' and e.is_linestring():
@@ -224,9 +224,9 @@ def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
     """merges road and rail geometries, crops it if it intersects with one of the other given elements and smooths the resulting geometry
 
     Args:
-        road_and_rail (List[OsmElement]): list of road and rail OsmElements with geom_buffered attribute or Polygon / MultiPolygon geom attribute
-        elements (List[OsmElement]): list of OsmElements to get specific cropper geometries from
-        pedestrian_ways (List[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute to clip
+        road_and_rail (List[OsmElement]): list of road and rail OsmElements with Polygon / MultiPolygon geometries
+        elements (List[OsmElement]): list of OsmElements to get specific cropper geometries from to clip
+        pedestrian_ways (List[OsmElement]): pedestrian ways with Polygon / MultiPolygon geometries to clip
         buildings (List[OsmElement]): buildings to clip
         pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffering buildings. Defaults to 1.6.
 
@@ -246,7 +246,7 @@ def clean_and_smooth_road_and_rail(road_and_rail: List[OsmElement],
 
         Args:
             elements (List[OsmElement): list of OsmElements with platform elements
-            pedestrian_ways (List[OsmElement]): pedestrian ways with geom_buffered attribute or Polygon / MultiPolygon geom attribute
+            pedestrian_ways (List[OsmElement]): pedestrian ways with Polygon / MultiPolygon geometry
             buildings (List[OsmElement): buildings
             pedestrian_way_default_width (float): assumed default width of pedestrian ways as base for buffering buildings
 
