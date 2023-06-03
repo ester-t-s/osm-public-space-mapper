@@ -32,7 +32,7 @@ def set_traffic_space_type(elements: List[OsmElement]):
 def get_traffic_areas_as_polygons(elements: List[OsmElement],
                                   highway_default_widths: dict[str, Tuple[float, float]] = None,
                                   cycleway_default_widths: dict[dict[str: float]] = None,
-                                  tram_gauge: float = 1.435, tram_additional_carriageway_width: float = 0.5,
+                                  tram_gauge: float = 1.435, tram_additional_carriageway_width: float = 1,
                                   train_gauge: float = 1.435, train_additional_carriageway_width: float = 1.5,
                                   ) -> List[GeometryElement]:
 
@@ -49,20 +49,20 @@ def get_traffic_areas_as_polygons(elements: List[OsmElement],
                            highway_default_widths: dict[str, Tuple[float, float]] = {
                                'service': (4.5, 3),
                                'residential': (4.5, 3),
-                               'tertiary': (4.5, 3),
-                               'primary': (5.5, 3),
-                               'cycleway': (2, 1.5),
-                               'secondary': (4.5, 3),
-                               'motorway_link': (6.5, 3),
-                               'platform': (2, 1.5),
-                               'motorway': (6.5, 3),
-                               'unclassified': (4.5, 3),
-                               'primary_link': (5.5, 3),
-                               'secondary_link': (5, 3),
+                               'tertiary': (5, 3.8),
+                               'primary': (6, 3.8),
+                               'cycleway': (2, 1),
+                               'secondary': (6.5, 4),
+                               'motorway_link': (6.5, 4),
+                               'platform': (1, 1),
+                               'motorway': (6.5, 3.8),
+                               'unclassified': (5, 3),
+                               'primary_link': (6.5, 3.8),
+                               'secondary_link': (6.5, 3.8),
                                'construction': (5, 3),
                                'everything else': (5, 3)
                             },
-                           cycleway_default_widths: dict[dict[str: float]] = {'cycleway': {'lane': 1.5, 'opposite': 1, 'track': 1.5, 'opposite_lane': 1.5, 'opposite_track': 1.5},
+                           cycleway_default_widths: dict[dict[str: float]] = {'cycleway': {'lane': 1.5, 'opposite': 0.5, 'track': 1.5, 'opposite_lane': 1, 'opposite_track': 1.5},
                                                                               'cycleway:right': {'lane': 1.5, 'track': 1.5},
                                                                               'cycleway:both': {'lane': 2*1.5, 'track': 2*1.5},
                                                                               'cycleway:left': {'lane': 1.5, 'track': 1.5}
@@ -194,7 +194,7 @@ def get_traffic_areas_as_polygons(elements: List[OsmElement],
     return road_and_rail
 
 
-def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_default_width: float = 1.6) -> List[OsmElement]:
+def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_default_width: float = 2) -> List[OsmElement]:
     """buffers LineString pedestrian ways and returns them together with pedestrian way polygons
 
     Args:
