@@ -98,23 +98,13 @@ def clean_geometries(elements: List[OsmElement]) -> None:
         Note:
             Neccessary because current version of esy.osm.shape interprets some closed ways wrongly as Polygons insted of LineStrings
         """
-        def is_highway_polygon(e: OsmElement) -> bool:
-            if e.has_tag('highway'):
-                return e.is_polygon()
-
-        def is_fence(e: OsmElement) -> bool:
-            if e.tags.get('barrier') == 'fence':
-                return e.is_polygon()
-
-        def should_be_linestring(e: OsmElement) -> bool:
-            return e.tags.get('area', 'no') == 'no'
 
         def transform_to_linestring(e: OsmElement) -> None:
             e.geom = LineString(e.geom.exterior)
 
         for e in elements:
-            if is_highway_polygon(e) or is_fence(e):
-                if should_be_linestring(e):
+            if e.is_highway_polygon() or e.is_fence_polygon() or e.is_wall_polygon():
+                if not e.is_area():
                     transform_to_linestring(e)
 
     transform_simple_multipolygon_to_polygon(elements)
@@ -144,26 +134,9 @@ def drop_irrelevant_elements_based_on_tags(elements: List[OsmElement]) -> List[O
         Returns:
             List[OsmElement]: filtered list
         """
-        def is_non_groundlevel(e: OsmElement) -> bool:
-            non_groundlevel = False
-            if e.has_tag('level'):
-                try:
-                    list(map(float, str(e.tags.get('level')).split(';')))
-                except ValueError:
-                    pass
-                else:
-                    if 0 not in list(map(float, str(e.tags.get('level')).split(';'))):
-                        non_groundlevel = True
-            elif e.tags.get('tunnel') == 'yes':
-                non_groundlevel = True
-            elif e.tags.get('parking') == 'underground':
-                non_groundlevel = True
-            elif e.tags.get('location') == 'underground':
-                non_groundlevel = True
-            return non_groundlevel
 
         for e in elements:
-            if is_non_groundlevel(e):
+            if e.is_non_groundlevel():
                 e.ignore = True
         return [e for e in elements if not e.ignore]
 
