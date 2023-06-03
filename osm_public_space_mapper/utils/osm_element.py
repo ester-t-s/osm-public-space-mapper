@@ -19,9 +19,9 @@ class OsmElement(GeometryElement):
         Raises:
             TypeError: raised if attr are not given as tuple with three elements
         """
+        GeometryElement.__init__(self, geometry=attr[0])
         self._set_id(attr[1])
         self._set_tags(attr[2])
-        GeometryElement.__init__(self, geometry=attr[0])
 
     def _get_id(self) -> int:
         return self.__id
@@ -54,6 +54,9 @@ class OsmElement(GeometryElement):
         """
         return self.tags.get(tag) is not None
 
+    # IDENTIFY PROPERTIES OF ELEMENT #
+
+    # identify buildings
     def is_building(self) -> bool:
         """identifies an element as building depending on tags and geometry
 
@@ -75,6 +78,7 @@ class OsmElement(GeometryElement):
         else:
             return False
 
+    # identify traffic area
     def is_crossing(self) -> bool:
         """identifies an element as crossing depending on tags
 
@@ -91,44 +95,6 @@ class OsmElement(GeometryElement):
                     crossing = True
                     break
         return crossing
-
-    def is_entrance(self) -> bool:
-        """identifies an element as entrance depending on tags and geometry type
-
-        Returns:
-            bool: boolean value if element is identified as entrance
-        """
-        entrance = False
-        if self.has_tag('highway') and self.tags.get('highway') != 'motorway' and self.is_linestring():
-            entrance = True
-        elif self.is_crossing():
-            entrance = True
-        elif self.tags.get('barrier') == 'gate':
-            entrance = True
-        return entrance
-
-    def is_barrier(self) -> bool:
-        """identifies an element as barrier depending on tags and geometry type
-
-        Returns:
-            bool: boolean value if element is identified as barrier
-
-        Notes:
-            Barriers, motorways and railways (not trams) are identified as barriers.
-            For all apart from landuse == railway, only LineStrings are counted because they should be set up as LineStrings.
-            If the element has a layer tag, it is not counted as barrier, because it is assumed that there is something below/above granting access through this barrier
-
-        """
-        barrier = False
-        if self.has_tag('barrier') and self.is_linestring():
-            barrier = True
-        elif self.tags.get('highway') == 'motorway' and self.is_linestring():
-            barrier = True
-        elif self.tags.get('railway') == 'rail' and self.is_linestring() and self.tags.get('embedded') != 'yes':
-            barrier = True
-        elif self.tags.get('landuse') == 'railway' and (self.is_polygon() or self.is_multipolygon()):
-            barrier = True
-        return barrier
 
     def is_pedestrian_way(self) -> bool:
         """identifies an element as a pedestrian way based on values of highway tag and if it is not a crossing
@@ -179,6 +145,11 @@ class OsmElement(GeometryElement):
         """
         return any([self.tags.get('railway') in ['tram', 'rail'], self.tags.get('landuse') == 'railway'])
 
+    def is_highway_polygon(self) -> bool:
+        if self.has_tag('highway'):
+            return self.is_polygon()
+
+    # identify construction
     def is_construction(self) -> bool:
         if any([self.has_tag('construction'),
                 self.has_tag('construction:highway'),
@@ -188,3 +159,73 @@ class OsmElement(GeometryElement):
             return True
         else:
             return False
+
+    # identify barriers and entrances
+    def is_fence_polygon(self) -> bool:
+        if self.tags.get('barrier') == 'fence':
+            return self.is_polygon()
+
+    def is_wall_polygon(self) -> bool:
+        if self.tags.get('barrier') == 'wall' and not self.has_tag('building'):
+            return self.is_polygon()
+
+    def is_entrance(self) -> bool:
+        """identifies an element as entrance depending on tags and geometry type
+
+        Returns:
+            bool: boolean value if element is identified as entrance
+        """
+        entrance = False
+        if self.has_tag('highway') and self.tags.get('highway') != 'motorway' and self.is_linestring():
+            entrance = True
+        elif self.is_crossing():
+            entrance = True
+        elif self.tags.get('barrier') == 'gate':
+            entrance = True
+        return entrance
+
+    def is_barrier(self) -> bool:
+        """identifies an element as barrier depending on tags and geometry type
+
+        Returns:
+            bool: boolean value if element is identified as barrier
+
+        Notes:
+            Barriers, motorways and railways (not trams) are identified as barriers.
+            For all apart from landuse == railway, only LineStrings are counted because they should be set up as LineStrings.
+            If the element has a layer tag, it is not counted as barrier, because it is assumed that there is something below/above granting access through this barrier
+
+        """
+        barrier = False
+        if self.has_tag('barrier') and self.is_linestring():
+            barrier = True
+        elif self.tags.get('highway') == 'motorway' and self.is_linestring():
+            barrier = True
+        elif self.tags.get('railway') == 'rail' and self.is_linestring() and self.tags.get('embedded') != 'yes':
+            barrier = True
+        elif self.tags.get('landuse') == 'railway' and (self.is_polygon() or self.is_multipolygon()):
+            barrier = True
+        return barrier
+
+    # identify area
+    def is_area(self) -> bool:
+        return self.tags.get('area') == 'yes'
+
+    # identify groundlevel
+    def is_non_groundlevel(self) -> bool:
+        non_groundlevel = False
+        if self.has_tag('level'):
+            try:
+                list(map(float, str(self.tags.get('level')).split(';')))
+            except ValueError:
+                pass
+            else:
+                if 0 not in list(map(float, str(self.tags.get('level')).split(';'))):
+                    non_groundlevel = True
+        elif self.tags.get('tunnel') == 'yes':
+            non_groundlevel = True
+        elif self.tags.get('parking') == 'underground':
+            non_groundlevel = True
+        elif self.tags.get('location') == 'underground':
+            non_groundlevel = True
+        return non_groundlevel
