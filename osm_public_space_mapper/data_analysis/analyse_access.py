@@ -141,7 +141,7 @@ def interpret_barriers(elements: List[OsmElement]) -> None:
                 barrier.access = 'yes'
             elif has_access_point == 'restricted':
                 barrier.access = 'restricted'
-            else:
+            elif has_access_point is False:
                 barrier.access = 'no'
 
         set_access_attribute_of_entrances(intersecting_entrances)
@@ -384,7 +384,7 @@ def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
         elif element.space_type in space_types_without_access:
             element.access = 'no'
             element.access_derived_from = 'space type'
-        if not element.access:
+        if element.access is None:
             uncategorized_space_types.append(element.space_type)
             element.access = 'undefined'
     if len(uncategorized_space_types) > 0:
