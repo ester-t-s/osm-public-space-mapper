@@ -22,9 +22,11 @@ def set_traffic_space_type(elements: List[OsmElement]):
         elif e.is_parking_polygon():
             e.space_type = 'parking'
             e.access = ('no', 'overwrite_yes')
+            e.access_derived_from = ('space category')
         elif e.is_rail():
             e.space_type = 'rail'
             e.access = ('no', 'overwrite_yes')
+            e.access_derived_from = ('space category')
         elif e.has_tag('highway'):
             e.space_type = 'road'
 
