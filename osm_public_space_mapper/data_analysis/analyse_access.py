@@ -369,7 +369,7 @@ def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
                                           'miniature_golf', 'stadium', 'horse_riding'
                                           ]  # because usually linked to comsumption / fees / hours which might not be recorded in OSM
     space_types_without_access = ['allotments', 'construction', 'landfill', 'military', 'flowerbed', 'fountain',
-                                  'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery', 'planter'
+                                  'water', 'wetland', 'parking', 'storage', 'farmland', 'orchard', 'plant_nursery', 'planter',
                                   'vineyard', 'harbour', 'resort', 'garages', 'stage', 'reservoir', 'scrub', 'shrubbery',
                                   'greenhouse_horticulture', 'meadow', 'nature_reserve'
                                   ]
