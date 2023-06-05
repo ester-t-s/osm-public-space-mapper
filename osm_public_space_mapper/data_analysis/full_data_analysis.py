@@ -13,10 +13,10 @@ from osm_public_space_mapper.utils.bounding_box import BoundingBox
 
 
 # PARAMETERS TO SET #
-source_filepath = "example_application/vienna-rennweg-to-arenbergpark_20230308.osm.pbf"
-bounding_box = BoundingBox(top=48.1999, left=16.3843, bottom=48.1931, right=16.3977)
+source_filepath = "example_application/Rabenhof.osm.pbf"
+bounding_box = BoundingBox(left=16.39885944803246, right=16.405590927719924, top=48.198866317671815, bottom=48.19436970139387)
 local_crs = pyproj.CRS.from_epsg(3035)  # EPSG 3035 is recommended as default for European Lambert Azimuthal Equal Area, but can be adapted for a more suitable CRS
-target_filepath = "example_application/public-space-vienna-rennweg-to-arenbergpark.geojson"
+target_filepath = "example_application/Rabenhof_public_space.geojson"
 print_status = True  # Should the current analysis step be printed to the terminal?
 
 # CLEANING AND PREPARING DATA #
