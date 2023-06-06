@@ -24,8 +24,8 @@ The data analysis is brought together in osm_public_space_mapper.data_analysis
 full_data_analysis and uses multiple other modules from the package and the custom classes BoundingBox, GeometryElement and OsmElement defined in osm_public_space_mapper.utils.
 The result will be a GeoJSON file with Polygon objects (EPSG 4326) and the attributes space_type, access and a combination of these two in viz-category.
 If elements are left with undefined access, the space_type should be checked and access should be derived from that.
-An OSM extract for a part of Vienna's third district around Rabenhof, downloaded on June 5, 2023, is provided as sample data under OSM Licence: [OpenStreetMap](https://wiki.osmfoundation.org/wiki/Licence/Attribution_Guidelines)
-The example_application can for example be visualized according to public accessibility and space type as shown in this example:
+An OSM extract for a part of Vienna's third district around Rabenhof, downloaded on June 5, 2023, is provided as sample data under OSM Licence: [OpenStreetMap](https://wiki.osmfoundation.org/wiki/Licence/Attribution_Guidelines).
+The example_application can for example be visualized according to public accessibility and space type as shown in this example, visualized in QGIS:
 ![visualization of publicly accessible space in the sample area around Rabenhof, Vienna](example_application/sample_visualization_Rabenhof.png)
 
 ## Limitations
