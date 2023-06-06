@@ -28,6 +28,13 @@ An OSM extract for a part of Vienna's third district around Rabenhof, downloaded
 The example_application can for example be visualized according to public accessibility and space type as shown in this example, visualized in QGIS:
 ![visualization of publicly accessible space in the sample area around Rabenhof, Vienna](example_application/sample_visualization_Rabenhof.png)
 
+## Code structure
+
+The code for data processing consists of the osm_public_space_mapper package and data for an example application in the example_application folder.
+The different data analysis steps are combined in the full_data_analysis.py module of the data_analysis subpackage.
+There, functions from a total of seven modules are imported and called for the various processing steps.
+In the utils subpackage, the necessary classes (BoundingBox, GeometryElement and derived from them OsmElement) and auxiliary functions (in helpers.py) are defined.
+
 ## Limitations
 
 ### Technical limitations
