@@ -255,11 +255,12 @@ def set_space_category(elements: List[OsmElement | GeometryElement]) -> List[Osm
                                  'islet', 'forest', 'heath', 'nature_reserve', 'greenfield', 'shrubbery'],
                   'play and sports': ['playground', 'pitch', 'fitness_station', 'track', 'miniature_golf', 'horse_riding'],
                   'water': ['fountain', 'water', 'wetland', 'swimming_pool'],
-                  'traffic area': ['parking', 'traffic area'],
+                  'road': ['road', 'parking'],
+                  'rail': ['rail'],  # to be merged with road later
                   'open space': ['public transport stop', 'square', 'scree', 'bridge', 'pier', 'marina', 'outdoor_seating', 'biergarten'],
                   'building': ['building'],
                   'inaccessible enclosed area': ['inaccessible enclosed area'],
-                  'walking area': ['walking area'],
+                  'walking area': ['walking area'],  # to be merged with open space later
                   'construction': ['construction']
                   }
     uncategorized_space_types = []
@@ -338,17 +339,20 @@ def crop_overlapping_polygons(elements: List[OsmElement | GeometryElement]) -> L
     clip_elements_within_category(elements)
     clip_category_from_elements(elements, category_to_clip='building')
     clip_category_from_elements(elements, category_to_clip='construction')
+    clip_category_from_elements(elements, category_to_clip='rail', categories_to_crop=['greenspace', 'open space', 'walking area'])
     clip_category_from_elements(elements, category_to_clip='water')
-    clip_category_from_elements(elements, category_to_clip='inaccessible enclosed area', categories_to_crop=['traffic area'])
+    clip_category_from_elements(elements, category_to_clip='inaccessible enclosed area', categories_to_crop=['road', 'rail'])
     clip_category_from_elements(elements, category_to_clip='walking area', categories_to_crop=['greenspace', 'play and sports'])
     clip_category_from_elements(elements, category_to_clip='play and sports')
     clip_category_from_elements(elements, category_to_clip='greenspace')
-    clip_category_from_elements(elements, category_to_clip='traffic area', categories_to_crop=['open space', 'walking area'])
+    clip_category_from_elements(elements, category_to_clip='road', categories_to_crop=['open space', 'walking area'])
     for e in elements:
         if e.space_category == 'walking area':
             e.space_category = 'open space'
         elif e.space_category == 'inaccessible enclosed area':
             e.space_category = 'undefined space'
+        elif e.space_category in ['rail', 'road']:
+            e.space_category = 'traffic area'
     elements = merge_elements_with_identical_attributes(elements)
     return elements
 

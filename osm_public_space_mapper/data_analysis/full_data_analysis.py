@@ -60,15 +60,21 @@ if print_status:
     print('Setting space type attribute traffic areas')
 analyse_traffic_area.set_traffic_space_type(dataset)
 if print_status:
-    print('Getting car/bicycle/rail traffic areas as polygons')
-road_and_rail = analyse_traffic_area.get_traffic_areas_as_polygons(dataset,
-                                                                   local_var.highway_default_widths,
-                                                                   local_var.cycleway_default_widths,
-                                                                   local_var.tram_gauge,
-                                                                   local_var.tram_additional_carriageway_width,
-                                                                   local_var.train_gauge,
-                                                                   local_var.train_additional_carriageway_width
-                                                                   )
+    print('Getting roads as polygons')
+road_polygons = analyse_traffic_area.get_roads_as_polygons(dataset,
+                                                           local_var.highway_default_widths,
+                                                           local_var.cycleway_default_widths,
+                                                           local_var.highway_types_for_default_streetside_parking,
+                                                           local_var.default_parking_width
+                                                           )
+if print_status:
+    print('Getting rail as polygons')
+rail_polygons = analyse_traffic_area.get_rail_as_polygons(dataset,
+                                                          local_var.tram_gauge,
+                                                          local_var.tram_additional_carriageway_width,
+                                                          local_var.train_gauge,
+                                                          local_var.train_additional_carriageway_width
+                                                          )
 if print_status:
     print('Getting pedestrian ways as polygons')
 pedestrian_ways = analyse_traffic_area.get_pedestrian_ways_as_polygons(dataset, local_var.pedestrian_way_default_width)
@@ -79,7 +85,7 @@ dataset = clean_data.drop_road_rail_walking(dataset)
 # CLEANING BUILDINGS #
 if print_status:
     print('Clipping building passages from buildings')
-buildings = clean_data.clip_building_passages_from_buildings(buildings, road_and_rail+pedestrian_ways)
+buildings = clean_data.clip_building_passages_from_buildings(buildings, road_polygons+pedestrian_ways)
 
 # ANALYSING ACCESS THROUGH BARRIERS#
 if print_status:
@@ -93,7 +99,7 @@ if print_status:
 inaccessible_enclosed_areas = analyse_access.get_inaccessible_enclosed_areas(inaccessible_barriers, buildings)
 if print_status:
     print('Splitting elements if they overlap with inaccessible enclosed area and assign access - be patient, that may take a while.')
-dataset, road_and_rail, pedestrian_ways, inaccessible_enclosed_areas = analyse_access.compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(dataset, road_and_rail, pedestrian_ways, inaccessible_enclosed_areas)
+dataset, road_polygons, pedestrian_ways, inaccessible_enclosed_areas = analyse_access.compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(dataset, road_polygons, pedestrian_ways, inaccessible_enclosed_areas)
 
 # CLEANING DATA #
 if print_status:
@@ -103,8 +109,8 @@ if print_status:
     print('Dropping leftover linestrings from dataset')
 dataset = clean_data.drop_all_linestrings(dataset)
 
-# CLEANING TRAFFIC AREA #
-road_and_rail = analyse_traffic_area.clean_and_smooth_road_and_rail(road_and_rail, dataset, pedestrian_ways, buildings, local_var.pedestrian_way_default_width)
+# CLEANING ROAD POLYGONS #
+road_polygon = analyse_traffic_area.clean_and_smooth_roads(road_polygons, dataset, pedestrian_ways, buildings, local_var.pedestrian_way_default_width)
 
 # SETTING MISSING SPACE TYPE AND GUESSING MISSING ACCESS #
 if print_status:
@@ -120,7 +126,7 @@ analyse_access.assume_access_based_on_space_type((dataset + pedestrian_ways))
 # CLEANING DATA #
 if print_status:
     print('Combining all elements that define space in a list')
-all_defined_space = dataset + buildings + inaccessible_enclosed_areas + pedestrian_ways + [road_and_rail]
+all_defined_space = dataset + buildings + inaccessible_enclosed_areas + pedestrian_ways + [road_polygon] + rail_polygons
 
 if print_status:
     print('Generalizing space types in categories')
