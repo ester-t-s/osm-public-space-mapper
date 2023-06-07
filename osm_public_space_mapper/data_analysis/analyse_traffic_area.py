@@ -173,12 +173,11 @@ def get_roads_as_polygons(elements: List[OsmElement],
     return highways_polygons
 
 
-def get_rail_as_polygons(elements: List[OsmElement],
-                         tram_gauge: float = 1.435,
-                         tram_additional_carriageway_width: float = 1,
-                         train_gauge: float = 1.435,
-                         train_additional_carriageway_width: float = 1.5
-                         ) -> List[OsmElement]:
+def get_rail_as_polygons_and_smooth(elements: List[OsmElement],
+                                    tram_gauge: float = 1.435,
+                                    tram_additional_carriageway_width: float = 1,
+                                    train_gauge: float = 1.435,
+                                    train_additional_carriageway_width: float = 1.5) -> GeometryElement:
     """iterates over list of OsmElements and buffers railways and thus transforms the LineStrings to Polygons based on tram and train gauge and buffer size
 
     Args:
@@ -191,6 +190,16 @@ def get_rail_as_polygons(elements: List[OsmElement],
     Returns:
         List[OsmElement]: list of only railways as OsmElements with buffered geometries
     """
+
+    def smooth_rail(rail_polygons: List[OsmElement]) -> GeometryElement:
+        rail_union = shapely.ops.unary_union([e.geom for e in rail_polygons])
+        rail_smoothed = GeometryElement(geometry=rail_union.buffer(1, join_style='mitre').buffer(-1, join_style='mitre'),
+                                        space_type='rail',
+                                        access='no',
+                                        access_derived_from='space_type'
+                                        )
+        return rail_smoothed
+
     rails_polygons = []
     for e in [e for e in elements if e.space_type == 'rail']:
         if e.tags.get('railway') == 'tram':
@@ -202,7 +211,7 @@ def get_rail_as_polygons(elements: List[OsmElement],
             rails_polygons.append(e)
         elif e.is_multipolygon() or e.is_polygon():
             rails_polygons.append(e)
-    return rails_polygons
+    return smooth_rail(rails_polygons)
 
 
 def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_default_width: float = 2) -> List[OsmElement]:
@@ -269,7 +278,7 @@ def clean_and_smooth_roads(road_polygons: List[OsmElement],
         return cropper_geometries
 
     def smooth_road(road_polygons_cropped: GeometryElement) -> GeometryElement:
-        first_buffer_size = pedestrian_way_default_width/2+0.1  # buffer with half width of buffered pedestrian way plus a little more to close crossings that were cut out during cropping
+        first_buffer_size = pedestrian_way_default_width/2+0.2  # buffer with half width of buffered pedestrian way plus a little more to close crossings that were cut out during cropping
         road_smoothed = copy.deepcopy(road_polygons_cropped)
         road_smoothed.geom = road_smoothed.geom.buffer(first_buffer_size, join_style='mitre').buffer(-first_buffer_size, join_style='mitre').buffer(0.3, join_style='round').buffer(-0.3, join_style='round')
         return road_smoothed

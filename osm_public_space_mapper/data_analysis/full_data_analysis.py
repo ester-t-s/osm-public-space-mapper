@@ -69,12 +69,12 @@ road_polygons = analyse_traffic_area.get_roads_as_polygons(dataset,
                                                            )
 if print_status:
     print('Getting rail as polygons')
-rail_polygons = analyse_traffic_area.get_rail_as_polygons(dataset,
-                                                          local_var.tram_gauge,
-                                                          local_var.tram_additional_carriageway_width,
-                                                          local_var.train_gauge,
-                                                          local_var.train_additional_carriageway_width
-                                                          )
+rail_polygon = analyse_traffic_area.get_rail_as_polygons_and_smooth(dataset,
+                                                                    local_var.tram_gauge,
+                                                                    local_var.tram_additional_carriageway_width,
+                                                                    local_var.train_gauge,
+                                                                    local_var.train_additional_carriageway_width
+                                                                    )
 if print_status:
     print('Getting pedestrian ways as polygons')
 pedestrian_ways = analyse_traffic_area.get_pedestrian_ways_as_polygons(dataset, local_var.pedestrian_way_default_width)
@@ -126,7 +126,7 @@ analyse_access.assume_access_based_on_space_type((dataset + pedestrian_ways))
 # CLEANING DATA #
 if print_status:
     print('Combining all elements that define space in a list')
-all_defined_space = dataset + buildings + inaccessible_enclosed_areas + pedestrian_ways + [road_polygon] + rail_polygons
+all_defined_space = dataset + buildings + inaccessible_enclosed_areas + pedestrian_ways + [road_polygon] + [rail_polygon]
 
 if print_status:
     print('Generalizing space types in categories')
