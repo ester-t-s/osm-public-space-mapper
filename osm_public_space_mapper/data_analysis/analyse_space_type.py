@@ -15,6 +15,7 @@ def get_and_drop_buildings(elements: List[OsmElement]) -> Tuple[List[OsmElement]
     for building in buildings:
         building.space_type = 'building'
         building.access = 'undefined'
+        building.access_derived_from = 'undefined'
     elements = [e for e in elements if not e.is_building()]
     return elements, buildings
 
