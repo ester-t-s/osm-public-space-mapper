@@ -103,7 +103,7 @@ def clean_geometries(elements: List[OsmElement]) -> None:
             e.geom = LineString(e.geom.exterior)
 
         for e in elements:
-            if e.is_highway_polygon() or e.is_fence_polygon() or e.is_wall_polygon():
+            if e.is_highway_polygon() or e.is_barrier_polygon() or e.is_wall_polygon():
                 if not e.is_area():
                     transform_to_linestring(e)
 
