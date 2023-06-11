@@ -354,6 +354,7 @@ def crop_overlapping_polygons(elements: List[GeometryElement]) -> List[GeometryE
         elif e.space_category in ['rail', 'road']:
             e.space_category = 'traffic area'
     elements = merge_elements_with_identical_attributes(elements)
+    clip_elements_within_category(elements)
     return elements
 
 
