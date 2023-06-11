@@ -192,7 +192,7 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: List[OsmElement], bui
             for i in range(len(polygon.interiors)):
                 inaccessible_enclosed_areas.append(GeometryElement(geometry=Polygon(polygon.interiors[i]).buffer(buffer_size*2, cap_style='square'),  # doubled buffer size for improved visualization
                                                                    access='no',
-                                                                   access_derived_from='inaccessible enclosed areas',
+                                                                   access_derived_from='inaccessible enclosed area',
                                                                    space_type='inaccessible enclosed area'
                                                                    ))
     return inaccessible_enclosed_areas
