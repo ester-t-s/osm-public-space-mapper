@@ -161,8 +161,8 @@ class OsmElement(GeometryElement):
             return False
 
     # identify barriers and entrances
-    def is_fence_polygon(self) -> bool:
-        if self.tags.get('barrier') == 'fence':
+    def is_barrier_polygon(self) -> bool:
+        if self.tags.get('barrier') in set(['fence', 'hedge']):
             return self.is_polygon()
 
     def is_wall_polygon(self) -> bool:
