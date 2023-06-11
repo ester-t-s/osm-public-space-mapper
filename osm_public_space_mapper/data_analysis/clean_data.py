@@ -300,18 +300,18 @@ def merge_elements_with_identical_attributes(elements: List[OsmElement | Geometr
     return merged_elements
 
 
-def crop_overlapping_polygons(elements: List[OsmElement | GeometryElement]) -> List[OsmElement | GeometryElement]:
+def crop_overlapping_polygons(elements: List[GeometryElement]) -> List[GeometryElement]:
 
-    def clip_elements_within_category(elements: List[OsmElement | GeometryElement]) -> List[OsmElement | GeometryElement]:
+    def clip_elements_within_category(elements: List[GeometryElement]) -> List[GeometryElement]:
 
-        def clip_access_no(elements: List[OsmElement | GeometryElement], space_category: str) -> None:
+        def clip_access_no(elements: List[GeometryElement], space_category: str) -> None:
             geometry_to_clip = shapely.ops.unary_union([e.geom for e in elements if e.space_category == space_category and e.access == 'no'])
             if not geometry_to_clip.is_empty:
                 for e in elements:
                     if e.space_category == sc and e.access in ['yes', 'restricted']:
                         e.geom = e.geom.difference(geometry_to_clip)
 
-        def clip_access_restricted(elements: List[OsmElement | GeometryElement], space_category: str) -> None:
+        def clip_access_restricted(elements: List[GeometryElement], space_category: str) -> None:
             geometry_to_clip = shapely.ops.unary_union([e.geom for e in elements if e.space_category == space_category and e.access == 'restricted'])
             if not geometry_to_clip.is_empty:
                 for e in elements:
