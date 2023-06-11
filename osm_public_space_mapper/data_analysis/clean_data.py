@@ -167,7 +167,7 @@ def drop_irrelevant_elements_based_on_tags(elements: List[OsmElement]) -> List[O
             'construction',
             'parking_space',
             'man_made'
-        ]
+            ]
         for e in elements:
             found = False
             for tag in relevant_tags:
