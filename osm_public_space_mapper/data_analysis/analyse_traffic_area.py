@@ -194,7 +194,7 @@ def get_rail_as_polygons_and_smooth(elements: List[OsmElement],
         rail_smoothed = GeometryElement(geometry=rail_union.buffer(1, join_style='mitre').buffer(-1, join_style='mitre'),
                                         space_type='rail',
                                         access='no',
-                                        access_derived_from='space_type'
+                                        access_derived_from='space type'
                                         )
         return rail_smoothed
 
