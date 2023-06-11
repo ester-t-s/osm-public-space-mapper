@@ -220,12 +220,14 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
             e_cropped = copy.deepcopy(e)
             if e.geom.intersects(enclosed_areas_union):
                 e_cropped.geom = e.geom.difference(enclosed_areas_union)
-            road_and_rail_cropped.append(e_cropped)
+            if not e_cropped.geom.is_empty:
+                road_and_rail_cropped.append(e_cropped)
         for e in pedestrian_ways:
             e_cropped = copy.deepcopy(e)
             if e.geom.intersects(enclosed_areas_union):
                 e_cropped.geom = e.geom.difference(enclosed_areas_union)
-            pedestrian_ways_cropped.append(e_cropped)
+            if not e_cropped.geom.is_empty:
+                pedestrian_ways_cropped.append(e_cropped)
         return road_and_rail_cropped, pedestrian_ways_cropped
 
     def assign_access_for_elements_in_enclosed_areas(elements: List[OsmElement], enclosed_areas: List[GeometryElement]) -> None:
