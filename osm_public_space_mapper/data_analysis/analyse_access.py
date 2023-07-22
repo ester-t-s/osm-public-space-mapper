@@ -379,6 +379,6 @@ def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
             element.access_derived_from = 'space type'
         if element.access is None:
             uncategorized_space_types.append(element.space_type)
-            element.access = 'undefined'
+            element.access = 'unknown'
     if len(uncategorized_space_types) > 0:
         print('No access categorized for', set(uncategorized_space_types), 'You should consider adding it to the function analyse_access.assume_access_based_on_space_type()')
