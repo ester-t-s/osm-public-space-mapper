@@ -29,7 +29,7 @@ def interpret_tags(elements: List[OsmElement]) -> None:
                         if (key == 'opening_hours' and e.tags.get(key) != '24/7') or key != 'opening_hours':
                             e.access = 'restricted'
                             e.access_derived_from = 'tags'
-                if e.access is None:  # if no restricted access tag was found but access / foot tag value is in tag_values_yes list
+                if e.access is None:  # if no restricted access tag key was found but access / foot tag value is in tag_values_yes list
                     e.access = 'yes'
                     e.access_derived_from = 'tags'
             elif e.tags.get('access') in access_key_values_restricted or e.tags.get('foot') in access_key_values_restricted:

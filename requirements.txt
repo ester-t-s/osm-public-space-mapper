@@ -1,7 +1,9 @@
-esy.osm.shape == 0.2
-geopandas
-pyproj
-shapely
+esy.osm.shape==0.2
+geopandas==0.12.1
+pyproj==3.4.0
+shapely==2.0.1
 
-pre-commit
-flake8
+pre-commit==3.2.0
+flake8==6.0.0
+
+# other versions might work too, but these are the ones I used
