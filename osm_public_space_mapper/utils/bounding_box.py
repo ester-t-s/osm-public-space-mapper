@@ -27,11 +27,11 @@ class BoundingBox:
         self.bottom_4326 = bottom
         self.geom_4326 = make_polygon(self, self.left_4326, self.right_4326, self.top_4326, self.bottom_4326)
 
-    def project(self, local_crs: pyproj.crs.crs.CRS) -> None:
+    def project(self, local_crs: pyproj.crs.crs.CRS = pyproj.CRS.from_epsg(3035)) -> None:
         """Projects the shapely geometry of the BoundingBox into the given local_crs and saves it in the attribute geom_projected
 
         Args:
-            local_crs (pyproj.crs.crs.CRS, optional): projected coordinate reference system that should be used for the projection, should be the same for projection of OsmElements.
+            local_crs (pyproj.crs.crs.CRS, optional): projected coordinate reference system that should be used for the projection, should be the same for projection of OsmElements. Defaults to EPSG 3035
         """
         projector = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg(4326), local_crs, always_xy=True)
         self.geom_projected = transform(projector.transform, self.geom_4326)

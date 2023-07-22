@@ -31,6 +31,9 @@ def drop_invalid_geometries(elements: List[OsmElement]) -> List[OsmElement]:
 
 
 def drop_empty_geometries(elements: List[OsmElement]) -> List[OsmElement]:
+    count = len([e for e in elements if e.geom.is_empty])
+    if count > 0:
+        print(count, 'elements were deleted because of empty geometry')
     return [e for e in elements if not e.geom.is_empty]
 
 
@@ -111,12 +114,12 @@ def clean_geometries(elements: List[OsmElement]) -> None:
     transform_false_polygons_to_linestrings(elements)
 
 
-def project_geometries(elements: List[OsmElement], local_crs: pyproj.crs.crs.CRS) -> None:
+def project_geometries(elements: List[OsmElement], local_crs: pyproj.crs.crs.CRS = pyproj.CRS.from_epsg(3035)) -> None:
     """Iterates over list of OsmElements and projects their geometries into the given local_crs
 
     Args:
         elements (List[OsmElement]): list of OsmElements to iterate over
-        local_crs (pyproj.crs.crs.CRS, optional): coordinate reference system to project to
+        local_crs (pyproj.crs.crs.CRS, optional): coordinate reference system to project to. Defaults to EPSG 3035
     """
     projector = pyproj.Transformer.from_crs(pyproj.CRS.from_epsg(4326), local_crs, always_xy=True)
     for e in elements:
