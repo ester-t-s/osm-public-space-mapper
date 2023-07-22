@@ -23,24 +23,31 @@ print_status = True  # Should the current analysis step be printed to the termin
 if print_status:
     print('Loading elements from', source_filepath)
 dataset = load_data.load_elements(source_filepath)
+
 if print_status:
     print('Dropping invalid geometries')
 dataset = clean_data.drop_invalid_geometries(dataset)
+
 if print_status:
     print('Dropping empty geometries')
 dataset = clean_data.drop_empty_geometries(dataset)
+
 if print_status:
     print('Dropping elements without tags')
 dataset = clean_data.drop_elements_without_tags(dataset)
+
 if print_status:
     print('Dropping all points apart from entrances')
 dataset = clean_data.drop_points_apart_from_entrances(dataset)
+
 if print_status:
     print('Dropping irrelevant elements based on tags')
 dataset = clean_data.drop_irrelevant_elements_based_on_tags(dataset)
+
 if print_status:
     print('Cleaning geometries')
 clean_data.clean_geometries(dataset)
+
 if print_status:
     print('Projecting geometries')
 clean_data.project_geometries(dataset, local_crs)
@@ -59,6 +66,7 @@ analyse_access.interpret_tags(dataset)
 if print_status:
     print('Setting space type attribute traffic areas')
 analyse_traffic_area.set_traffic_space_type(dataset)
+
 if print_status:
     print('Getting roads as polygons')
 road_polygons = analyse_traffic_area.get_roads_as_polygons(dataset,
@@ -67,6 +75,7 @@ road_polygons = analyse_traffic_area.get_roads_as_polygons(dataset,
                                                            regional_defaults.highway_types_for_default_streetside_parking,
                                                            regional_defaults.default_parking_width
                                                            )
+
 if print_status:
     print('Getting rail as polygons')
 rail_polygon = analyse_traffic_area.get_rail_as_polygons_and_smooth(dataset,
@@ -92,33 +101,45 @@ buildings = clean_data.clip_building_passages_from_buildings(buildings, road_pol
 if print_status:
     print('Interpreting barriers - be patient, that may take a while.')
 analyse_access.interpret_barriers(dataset)
+
 if print_status:
     print('Getting inaccessible barriers')
 inaccessible_barriers = analyse_access.get_inaccessible_barriers(dataset)
+
 if print_status:
     print('Getting inaccessible enclosed areas')
 inaccessible_enclosed_areas = analyse_access.get_inaccessible_enclosed_areas(inaccessible_barriers, buildings)
+
 if print_status:
-    print('Splitting elements if they overlap with inaccessible enclosed area and assign access - be patient, that may take a while.')
-dataset, road_polygons, pedestrian_ways, inaccessible_enclosed_areas = analyse_access.compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(dataset, road_polygons, pedestrian_ways, inaccessible_enclosed_areas)
+    print('Comparing elements with inaccessible enclosed area and assign access - be patient, that may take a while.')
+dataset, road_polygons, pedestrian_ways, inaccessible_enclosed_areas = analyse_access.compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(dataset,
+                                                                                                                                                                      road_polygons,
+                                                                                                                                                                      [rail_polygon],
+                                                                                                                                                                      pedestrian_ways,
+                                                                                                                                                                      inaccessible_enclosed_areas
+                                                                                                                                                                      )
 
 # CLEANING DATA #
 if print_status:
     print('Dropping linestring barriers and entrance points from dataset')
 dataset = clean_data.drop_linestring_barriers_and_entrance_points(dataset)
+
 if print_status:
     print('Dropping leftover linestrings from dataset')
 dataset = clean_data.drop_all_linestrings(dataset)
 
 # CLEANING ROAD POLYGONS #
 road_polygon = analyse_traffic_area.clean_and_smooth_roads(road_polygons, dataset, pedestrian_ways, buildings, regional_defaults.pedestrian_way_default_width)
+
 # SETTING MISSING SPACE TYPE AND GUESSING MISSING ACCESS #
 if print_status:
     print('Setting missing space types based on tags')
 analyse_space_type.set_missing_space_types(dataset)
+
 if print_status:
     print('Dropping elements with undefined space type')
 dataset = clean_data.drop_elements_with_undefined_space_type(dataset)
+
 if print_status:
     print('Setting missing access attribute based on space type')
 analyse_access.assume_access_based_on_space_type((dataset + pedestrian_ways))
@@ -144,9 +165,11 @@ all_defined_space = clean_data.crop_overlapping_polygons(all_defined_space)
 if print_status:
     print('Projecting bounding box')
 bounding_box.project(local_crs)
+
 if print_status:
     print('Cropping all element lists to projected bounding box')
 all_defined_space_cropped = clean_data.crop_defined_space_to_bounding_box(all_defined_space, bounding_box)
+
 if print_status:
     print('Getting undefined space within bounding box - be patient, that may take a while.')
 undefined_space_within_bbox = get_undefined_space.load(all_defined_space_cropped, bounding_box)
@@ -159,5 +182,6 @@ if print_status:
     print('Exporting all defined space and the undefined space to GeoJSON:', target_filepath)
 export_data.save2geojson(all_defined_space_cropped,
                          undefined_space_within_bbox,
-                         target_filepath, local_crs
+                         target_filepath,
+                         local_crs
                          )
