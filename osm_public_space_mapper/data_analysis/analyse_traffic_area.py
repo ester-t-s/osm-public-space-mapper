@@ -217,7 +217,7 @@ def get_pedestrian_ways_as_polygons(elements: List[OsmElement], pedestrian_way_d
 
     Args:
         elements (List[OsmElement]): list of OsmElements to iterate over and get process pedestrian ways
-        pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffer. Defaults to 1.6.
+        pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffer. Defaults to 2.
 
     Returns:
         List[OsmElement]: list of pedestrian ways as OsmElements with Polygon geometries
@@ -237,7 +237,7 @@ def clean_and_smooth_roads(road_polygons: List[OsmElement],
                            elements: List[OsmElement],
                            pedestrian_ways: List[OsmElement],
                            buildings: List[OsmElement],
-                           pedestrian_way_default_width: float = 1.6) -> GeometryElement:
+                           pedestrian_way_default_width: float = 2) -> GeometryElement:
     """merges road and rail geometries, crops it if it intersects with one of the other given elements and smooths the resulting geometry
 
     Args:
@@ -245,7 +245,7 @@ def clean_and_smooth_roads(road_polygons: List[OsmElement],
         elements (List[OsmElement]): list of OsmElements to get specific cropper geometries from to clip
         pedestrian_ways (List[OsmElement]): pedestrian ways with Polygon / MultiPolygon geometries to clip
         buildings (List[OsmElement]): buildings to clip
-        pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffering buildings. Defaults to 1.6.
+        pedestrian_way_default_width (float, optional): assumed default width of pedestrian ways as base for buffering buildings. Defaults to 2.
 
     Returns:
         GeometryElement: cleaned and smoothed road polygons
