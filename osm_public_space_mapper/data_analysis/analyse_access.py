@@ -199,37 +199,25 @@ def get_inaccessible_enclosed_areas(inaccessible_barriers: List[OsmElement], bui
 
 
 def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_access(elements: List[OsmElement],
-                                                                                    road_and_rail: List[OsmElement],
+                                                                                    road_polygons: List[OsmElement],
+                                                                                    rail_polygon: List[GeometryElement],
                                                                                     pedestrian_ways: List[OsmElement],
                                                                                     enclosed_areas: List[GeometryElement]) -> Tuple[List[OsmElement], List[GeometryElement]]:
 
-    def crop_road_rail_pedestrian_ways(road_and_rail: List[OsmElement], pedestrian_ways: List[OsmElement], enclosed_areas: List[GeometryElement]) -> Tuple[List[OsmElement], List[OsmElement]]:
-        """crops the geometries of road and rail and pedestrian ways to the parts not intersecting with inaccessible enclosed areas
+    """Compares OsmElements, including roads, rail polygon and pedestrian ways, to inaccessible enclosed areas and transfers information of inaccessibility to OsmElements,
+    by assigning inaccessibilty to elements within enclosed areas and with significant overlap, and by splitting elements if they intersect with enclosed areas,
+    and in the end cropping enclosed areas to area that does not intersect elements
 
-        Args:
-            road_and_rail (List[OsmElement]): list of road and rail elements
-            pedestrian_ways (List[OsmElement]): list of pedestrian way elements
-            enclosed_areas (List[GeometryElement]): list of inaccessible enclosed areas
+    Args:
+        elements (List[OsmElement]): list of osm elements
+        road_polygons (List[OsmElement]): list of road polygons
+        rail_polygon (List[GeometryElement]): merged rail polygon as a list
+        pedestrian_ways (List[OsmElement]): list of pedestrian ways and polygons
+        enclosed_areas (List[GeometryElement]): list of inaccessible enclosed areas
 
-        Returns:
-            Tuple[List[OsmElement], List[OsmElement]]: list of cropped road and rail and list of cropped pedestrian ways
-        """
-        road_and_rail_cropped, pedestrian_ways_cropped = [], []
-        enclosed_areas_union = shapely.ops.unary_union([e.geom for e in enclosed_areas])
-        for e in road_and_rail:
-            e_cropped = copy.deepcopy(e)
-            if e.geom.intersects(enclosed_areas_union):
-                e_cropped.geom = e.geom.difference(enclosed_areas_union)
-            if not e_cropped.geom.is_empty:
-                road_and_rail_cropped.append(e_cropped)
-        for e in pedestrian_ways:
-            e_cropped = copy.deepcopy(e)
-            if e.geom.intersects(enclosed_areas_union):
-                e_cropped.geom = e.geom.difference(enclosed_areas_union)
-            if not e_cropped.geom.is_empty:
-                pedestrian_ways_cropped.append(e_cropped)
-        return road_and_rail_cropped, pedestrian_ways_cropped
-
+    Returns:
+        Tuple[List[OsmElement], List[GeometryElement]]: returns split and cropped OsmElements, road_polygons, pedestrian_ways and enclosed_areas
+    """
     def assign_access_for_elements_in_enclosed_areas(elements: List[OsmElement], enclosed_areas: List[GeometryElement]) -> None:
         """iterates over list of OsmElements and sets access = no if it is within enclosed areas
 
@@ -346,12 +334,15 @@ def compare_and_crop_osm_elements_and_inaccessible_enclosed_areas_and_assign_acc
                 enclosed_areas_cropped.append(area)
         return enclosed_areas_cropped
 
-    road_and_rail_cropped, pedestrian_ways_cropped = crop_road_rail_pedestrian_ways(road_and_rail, pedestrian_ways, enclosed_areas)
-    enclosed_areas_cleaned = drop_inaccessible_enclosed_areas_with_significant_overlap_and_assign_access_attribute(elements, enclosed_areas)
+    assign_access_for_elements_in_enclosed_areas(elements+road_polygons+pedestrian_ways, enclosed_areas)
+    enclosed_areas_cleaned = drop_inaccessible_enclosed_areas_with_significant_overlap_and_assign_access_attribute(elements+road_polygons+pedestrian_ways, enclosed_areas)
     elements_split = split_osm_elements_with_intersection_with_inaccessible_enclosed_area(elements, enclosed_areas_cleaned)
-    enclosed_areas_cropped = crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements, enclosed_areas_cleaned)
+    road_polygons_split = split_osm_elements_with_intersection_with_inaccessible_enclosed_area(road_polygons, enclosed_areas_cleaned)
+    # rail_polygon is not split because it is inaccessible anyways
+    pedestrian_ways_split = split_osm_elements_with_intersection_with_inaccessible_enclosed_area(pedestrian_ways, enclosed_areas_cleaned)
+    enclosed_areas_cropped = crop_inaccessible_enclosed_areas_with_intersection_with_osm_element(elements+road_polygons+rail_polygon+pedestrian_ways, enclosed_areas_cleaned)
 
-    return elements_split, road_and_rail_cropped, pedestrian_ways_cropped, enclosed_areas_cropped
+    return elements_split, road_polygons_split, pedestrian_ways_split, enclosed_areas_cropped
 
 
 def assume_access_based_on_space_type(elements: List[OsmElement]) -> None:
