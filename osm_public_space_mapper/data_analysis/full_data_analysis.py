@@ -8,7 +8,7 @@ from osm_public_space_mapper.data_analysis import (
     get_undefined_space,
     export_data
 )
-from example_application import local_variables as local_var
+from example_application import regional_defaults
 from osm_public_space_mapper.utils.bounding_box import BoundingBox
 
 
@@ -62,22 +62,23 @@ analyse_traffic_area.set_traffic_space_type(dataset)
 if print_status:
     print('Getting roads as polygons')
 road_polygons = analyse_traffic_area.get_roads_as_polygons(dataset,
-                                                           local_var.highway_default_widths,
-                                                           local_var.cycleway_default_widths,
-                                                           local_var.highway_types_for_default_streetside_parking,
-                                                           local_var.default_parking_width
+                                                           regional_defaults.highway_default_widths,
+                                                           regional_defaults.cycleway_default_widths,
+                                                           regional_defaults.highway_types_for_default_streetside_parking,
+                                                           regional_defaults.default_parking_width
                                                            )
 if print_status:
     print('Getting rail as polygons')
 rail_polygon = analyse_traffic_area.get_rail_as_polygons_and_smooth(dataset,
-                                                                    local_var.tram_gauge,
-                                                                    local_var.tram_additional_carriageway_width,
-                                                                    local_var.train_gauge,
-                                                                    local_var.train_additional_carriageway_width
+                                                                    regional_defaults.tram_gauge,
+                                                                    regional_defaults.tram_additional_carriageway_width,
+                                                                    regional_defaults.train_gauge,
+                                                                    regional_defaults.train_additional_carriageway_width
                                                                     )
 if print_status:
     print('Getting pedestrian ways as polygons')
-pedestrian_ways = analyse_traffic_area.get_pedestrian_ways_as_polygons(dataset, local_var.pedestrian_way_default_width)
+pedestrian_ways = analyse_traffic_area.get_pedestrian_ways_as_polygons(dataset, regional_defaults.pedestrian_way_default_width)
+
 if print_status:
     print('Dropping all traffic areas from dataset')
 dataset = clean_data.drop_road_rail_walking(dataset)
@@ -110,8 +111,7 @@ if print_status:
 dataset = clean_data.drop_all_linestrings(dataset)
 
 # CLEANING ROAD POLYGONS #
-road_polygon = analyse_traffic_area.clean_and_smooth_roads(road_polygons, dataset, pedestrian_ways, buildings, local_var.pedestrian_way_default_width)
-
+road_polygon = analyse_traffic_area.clean_and_smooth_roads(road_polygons, dataset, pedestrian_ways, buildings, regional_defaults.pedestrian_way_default_width)
 # SETTING MISSING SPACE TYPE AND GUESSING MISSING ACCESS #
 if print_status:
     print('Setting missing space types based on tags')
