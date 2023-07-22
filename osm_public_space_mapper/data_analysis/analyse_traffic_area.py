@@ -24,7 +24,7 @@ def set_traffic_space_type(elements: List[OsmElement]) -> None:
             e.access_derived_from = ('space type')
         elif e.is_rail() and not e.is_point():
             e.space_type = 'rail'
-        elif e.has_tag('highway') and not e.is_point():
+        elif e.has_tag_key('highway') and not e.is_point():
             e.space_type = 'road'
 
 
@@ -81,8 +81,8 @@ def get_roads_as_polygons(elements: List[OsmElement],
         elements (List[OsmElement]): list of road OsmElements to iterate over and buffer
         highway_default_widths (dict[str, Tuple[float, float]]): dictionary with default highway widths of the roadway without parking, cycle lane etc. in a dictionary for each OSM highway type.
                                                                 Each dict element has a tuple consisting of the value for bi-directional and uni-directional highways.
-        cycleway_default_widths (dict[dict[str: float]]): default cyleway widths with separate values given for different tags and their values in a nested dictionary.
-        highway_types_for_default_streetside_parking (List[str], optional): highway tag values where parking is assumed.
+        cycleway_default_widths (dict[dict[str: float]]): default cyleway widths with separate values given for different keys and their values in a nested dictionary.
+        highway_types_for_default_streetside_parking (List[str], optional): highway key values where parking is assumed.
                                                                             Defaults to ['residential', 'tertiary', 'secondary', 'primary'].
         default_parking_width (float, optional): _description_. Defaults to 6.5, assuming one side horizontal (2m) and one side angle parking (4.5m),
                                                 taken from OSM Verkehrswende project https://parkraum.osm-verkehrswende.org/project-prototype-neukoelln/report/#27-fl%C3%A4chenverbrauch
@@ -92,7 +92,7 @@ def get_roads_as_polygons(elements: List[OsmElement],
         List[OsmElement]: list of road OsmElements with buffered geometries
     """
     def set_road_width(element: OsmElement) -> None:
-        """Sets road width of a highway element in width attribute, either taken from width tags or estimated based on default values and
+        """Sets road width of a highway element in width attribute, either taken from width key or estimated based on default values and
 
         Args:
             element (OsmElement): the OsmElement to analyse
@@ -121,17 +121,17 @@ def get_roads_as_polygons(elements: List[OsmElement],
                                width: float,
                                direction: str) -> float:
                 normal_lane_number = 1 if direction == 'uni-directional' else 2 if direction == 'bi-directional' else None
-                if element.has_tag('lanes') and float(element.tags.get('lanes')) != normal_lane_number:
+                if element.has_tag_key('lanes') and float(element.tags.get('lanes')) != normal_lane_number:
                     width = width * float(element.tags.get('lanes')) / normal_lane_number
                 return width
 
             def add_cycleway(element: OsmElement,
                              width: float) -> float:
                 if element.tags.get('highway') not in cycleway_default_widths:  # if it's not a cycleway by itself
-                    for tag in cycleway_default_widths:
-                        if element.has_tag(tag):
-                            if element.tags.get(tag) in cycleway_default_widths[tag]:
-                                width += cycleway_default_widths[tag][element.tags.get(tag)]
+                    for key in cycleway_default_widths:
+                        if element.has_tag_key(key):
+                            if element.tags.get(key) in cycleway_default_widths[key]:
+                                width += cycleway_default_widths[key][element.tags.get(key)]
                 return width
 
             def add_parking(element: OsmElement,
@@ -146,16 +146,16 @@ def get_roads_as_polygons(elements: List[OsmElement],
                 """
                 return width
 
-            direction = 'uni-directional' if element.has_tag('oneway') else 'bi-directional'
+            direction = 'uni-directional' if element.has_tag_key('oneway') else 'bi-directional'
             width = set_base_highway_width(element, direction)
             width = adapt_to_lanes(element, width, direction)
             width = add_cycleway(element, width)
             width = add_parking(element, width)
             return width
 
-        if element.has_tag('width:carriageway'):
+        if element.has_tag_key('width:carriageway'):
             element.width = float(e.tags.get('width:carriageway'))
-        elif element.has_tag('width'):
+        elif element.has_tag_key('width'):
             element.width = float(e.tags.get('width'))
         else:
             element.width = estimate_road_width(element)

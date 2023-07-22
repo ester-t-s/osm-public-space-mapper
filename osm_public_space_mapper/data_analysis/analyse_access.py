@@ -13,38 +13,38 @@ def interpret_tags(elements: List[OsmElement]) -> None:
     Args:
         elements (List[OsmElement]): list of OsmElements to iterate over
     """
-    access_tag_values_yes = ['yes', 'public', 'permissive']
-    access_tag_values_no = ['private', 'no', 'permit', 'key', 'military', 'residents']
-    access_tag_values_restricted = ['children', 'customers']
-    restricted_access_tags = ['fee', 'opening_hours', 'max_age', 'min_age', 'female', 'male', 'charge', 'seasonal']
+    access_key_values_yes = ['yes', 'permissive', 'public']
+    access_key_values_no = ['private', 'no', 'permit', 'key', 'military', 'residents']
+    access_key_values_restricted = ['children', 'customers']
+    restricted_access_keys = ['fee', 'opening_hours', 'max_age', 'min_age', 'female', 'male', 'charge', 'seasonal']
 
     for e in elements:
-        if any([e.has_tag('access'), e.has_tag('foot')]):
-            if e.tags.get('access') in access_tag_values_no or e.tags.get('foot') in access_tag_values_no:
+        if any([e.has_tag_key('access'), e.has_tag_key('foot')]):
+            if e.tags.get('access') in access_key_values_no or e.tags.get('foot') in access_key_values_no:
                 e.access = 'no'
                 e.access_derived_from = 'tags'
-            elif e.tags.get('access') in access_tag_values_yes or e.tags.get('foot') in access_tag_values_yes:
-                for tag in restricted_access_tags:
-                    if e.has_tag(tag) and e.tags.get(tag) != 'no':
-                        if (tag == 'opening_hours' and e.tags.get(tag) != '24/7') or tag != 'opening_hours':
+            elif e.tags.get('access') in access_key_values_yes or e.tags.get('foot') in access_key_values_yes:
+                for key in restricted_access_keys:
+                    if e.has_tag_key(key) and e.tags.get(key) != 'no':
+                        if (key == 'opening_hours' and e.tags.get(key) != '24/7') or key != 'opening_hours':
                             e.access = 'restricted'
                             e.access_derived_from = 'tags'
                 if e.access is None:  # if no restricted access tag was found but access / foot tag value is in tag_values_yes list
                     e.access = 'yes'
                     e.access_derived_from = 'tags'
-            elif e.tags.get('access') in access_tag_values_restricted or e.tags.get('foot') in access_tag_values_restricted:
+            elif e.tags.get('access') in access_key_values_restricted or e.tags.get('foot') in access_key_values_restricted:
                 e.access = 'restricted'
                 e.access_derived_from = 'tags'
             else:
-                for tag in restricted_access_tags:
-                    if e.has_tag(tag) and e.tags.get(tag) != 'no':
-                        if (tag == 'opening_hours' and e.tags.get(tag) != '24/7') or tag != 'opening_hours':
+                for key in restricted_access_keys:
+                    if e.has_tag_key(key) and e.tags.get(key) != 'no':
+                        if (key == 'opening_hours' and e.tags.get(key) != '24/7') or key != 'opening_hours':
                             e.access = 'restricted'
                             e.access_derived_from = 'tags'
         else:
-            for tag in restricted_access_tags:
-                if e.has_tag(tag) and e.tags.get(tag) != 'no':
-                    if (tag == 'opening_hours' and e.tags.get(tag) != '24/7') or tag != 'opening_hours':
+            for key in restricted_access_keys:
+                if e.has_tag_key(key) and e.tags.get(key) != 'no':
+                    if (key == 'opening_hours' and e.tags.get(key) != '24/7') or key != 'opening_hours':
                         e.access = 'restricted'
                         e.access_derived_from = 'tags'
 
@@ -63,7 +63,7 @@ def interpret_barriers(elements: List[OsmElement]) -> None:
             intersecting_entrances (List[OsmElement]): list of entrances that intersect with the barrier
 
         Notes:
-            the access attribute can not be overwritten, so if it was set earlier and with a more reliable source, e.g. based on an access tag, this step will not influence the value of the access attribute
+            the access attribute can not be overwritten, so if it was set earlier and with a more reliable source, e.g. based on an access key, this step will not influence the value of the access attribute
         """
 
         def set_access_attribute_of_entrances(intersecting_entrances: List[OsmElement]) -> None:

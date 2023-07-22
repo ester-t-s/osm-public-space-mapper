@@ -32,11 +32,11 @@ def set_missing_space_types(elements: List[OsmElement]) -> None:
                 e.space_type = 'construction'
 
     def set_space_type_from_tags(elements: List[OsmElement]) -> None:
-        tags = ['leisure', 'amenity', 'natural', 'place', 'landuse', 'man_made']
+        tag_keys = ['leisure', 'amenity', 'natural', 'place', 'landuse', 'man_made']
         for e in elements:
-            for tag in tags:
-                if e.has_tag(tag):
-                    e.space_type = e.tags.get(tag)
+            for key in tag_keys:
+                if e.has_tag_key(key):
+                    e.space_type = e.tags.get(key)
                     break
 
     set_space_type_for_construction(elements)

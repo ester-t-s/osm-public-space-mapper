@@ -149,7 +149,7 @@ def drop_irrelevant_elements_based_on_tags(elements: List[OsmElement]) -> List[O
         Returns:
             List[OsmElement]: filtered list
         """
-        relevant_tags = [
+        relevant_keys = [
             'highway',
             'public_transport',
             'railway',
@@ -170,8 +170,8 @@ def drop_irrelevant_elements_based_on_tags(elements: List[OsmElement]) -> List[O
             ]
         for e in elements:
             found = False
-            for tag in relevant_tags:
-                if e.has_tag(tag):
+            for key in relevant_keys:
+                if e.has_tag_key(key):
                     found = True
                     break
             if not found:
@@ -187,16 +187,16 @@ def drop_irrelevant_elements_based_on_tags(elements: List[OsmElement]) -> List[O
         Returns:
             List[OsmElement]: filtered list
         """
-        irrelevant_tags = ['boundary']
+        irrelevant_keys = ['boundary']
         for e in elements:
-            for tag in irrelevant_tags:
-                if e.has_tag(tag):
+            for key in irrelevant_keys:
+                if e.has_tag_key(key):
                     e.ignore = True
                     break
         return [e for e in elements if not e.ignore]
 
     def drop_elements_with_irrelevant_tag_value(elements: List[OsmElement]) -> List[OsmElement]:
-        """iterates over list of OsmElements and drops the elements where specific tags have specific, irrelevant values
+        """iterates over list of OsmElements and drops the elements where specific tag keys have specific, irrelevant values
 
         Args:
             elements (List[OsmElement]): list of OsmElements to iterate over
@@ -214,12 +214,12 @@ def drop_irrelevant_elements_based_on_tags(elements: List[OsmElement]) -> List[O
 
         for e in elements:
             exclude = False
-            for tag, values in irrelevant_tag_values.items():
-                if e.has_tag(tag):
-                    if e.tags.get(tag) in values:
+            for key, values in irrelevant_tag_values.items():
+                if e.has_tag_key(key):
+                    if e.tags.get(key) in values:
                         exclude = True
                         break
-            if e.has_tag('amenity'):
+            if e.has_tag_key('amenity'):
                 if e.tags.get('amenity') not in relevant_amenity_tag_values:
                     exclude = True
             if exclude:
@@ -413,7 +413,7 @@ def drop_all_linestrings(elements: List[OsmElement]) -> List[OsmElement]:
 
 def drop_linestring_barriers_and_entrance_points(elements: List[OsmElement]) -> List[OsmElement]:
     for e in elements:
-        if e.has_tag('barrier') and e.is_linestring():
+        if e.has_tag_key('barrier') and e.is_linestring():
             e.ignore = True
         elif e.is_entrance() and e.is_point():
             e.ignore = True

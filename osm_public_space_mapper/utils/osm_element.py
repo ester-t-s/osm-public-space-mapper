@@ -43,16 +43,16 @@ class OsmElement(GeometryElement):
             raise TypeError('Third tuple element is no dict')
     tags = property(_get_tags, _set_tags)
 
-    def has_tag(self, tag: str) -> bool:
-        """Returns if the element has a specific tag
+    def has_tag_key(self, key: str) -> bool:
+        """Returns if the element has a specific tag key
 
         Args:
-            tag (str): tag that should be checked for occurrence
+            key (str): tag key that should be checked for occurrence
 
         Returns:
-            bool: True if the element has that tag
+            bool: True if the element has that tag key
         """
-        return self.tags.get(tag) is not None
+        return self.tags.get(key) is not None
 
     # IDENTIFY PROPERTIES OF ELEMENT #
 
@@ -64,16 +64,16 @@ class OsmElement(GeometryElement):
             bool: boolean value if element is identified as building
         """
         building = False
-        building_tags = ['building', 'building:part', 'building:levels']
+        building_keys = ['building', 'building:part', 'building:levels']
         if self.is_polygon() or self.is_multipolygon():
-            for tag in building_tags:
-                if self.has_tag(tag):
+            for key in building_keys:
+                if self.has_tag_key(key):
                     if self.tags.get('building') != 'roof' and self.tags.get('building') != 'no':
                         building = True
         return building
 
     def is_building_passage(self) -> bool:
-        if self.has_tag('highway') and self.tags.get('tunnel') == 'building_passage':
+        if self.has_tag_key('highway') and self.tags.get('tunnel') == 'building_passage':
             return True
         else:
             return False
@@ -85,19 +85,19 @@ class OsmElement(GeometryElement):
         Returns:
             bool: boolean value if element is identified as crossing
         """
-        crossing_tags = set(['highway', 'footway', 'railway'])
+        crossing_keys = set(['highway', 'footway', 'railway'])
         crossing = False
         if self.tags.get('crossing', 'no') != 'no':
             crossing = True
         else:
-            for tag in crossing_tags:
-                if self.tags.get(tag) == 'crossing':
+            for key in crossing_keys:
+                if self.tags.get(key) == 'crossing':
                     crossing = True
                     break
         return crossing
 
     def is_pedestrian_way(self) -> bool:
-        """identifies an element as a pedestrian way based on values of highway tag and if it is not a crossing
+        """identifies an element as a pedestrian way based on values of highway tag key and if it is not a crossing
 
         Returns:
             bool: returns True if element is identified as pedestrian way
@@ -112,33 +112,33 @@ class OsmElement(GeometryElement):
             return False
 
     def is_platform_polygon(self) -> bool:
-        """identifies an element as a public transport platform polygon based on tags and values and geometry type
+        """identifies an element as a public transport platform polygon based on tag keys and values and geometry type
 
         Returns:
             bool: returns true if element is identified as platform polygon
         """
-        tags_and_values_for_platforms = {'public_transport': 'platform', 'railway': 'platform', 'highway': 'platform', 'shelter_type': 'public_transport'}
+        keys_and_values_for_platforms = {'public_transport': 'platform', 'railway': 'platform', 'highway': 'platform', 'shelter_type': 'public_transport'}
         is_platform_polygon = False
         if self.is_polygon() or self.is_multipolygon():
-            for tag in tags_and_values_for_platforms:
-                if self.tags.get(tag) == tags_and_values_for_platforms[tag]:
+            for key in keys_and_values_for_platforms:
+                if self.tags.get(key) == keys_and_values_for_platforms[key]:
                     is_platform_polygon = True
                     break
         return is_platform_polygon
 
     def is_parking_polygon(self) -> bool:
-        """identifies an element as parking polygon based on tags and values and geometry type
+        """identifies an element as parking polygon based on tag keys and values and geometry type
 
         Returns:
             bool: returns true if element is identified as parking polygon
         """
         if self.is_polygon() or self.is_multipolygon():
-            return any([self.tags.get('amenity') in ['parking', 'parking_space'], self.has_tag('parking'), self.has_tag('motorcycle_parking'), self.has_tag('parking_space')])
+            return any([self.tags.get('amenity') in ['parking', 'parking_space'], self.has_tag_key('parking'), self.has_tag_key('motorcycle_parking'), self.has_tag_key('parking_space')])
         else:
             return False
 
     def is_rail(self) -> bool:
-        """identifies an element as rail based on railway and landuse tag values, any geometry
+        """identifies an element as rail based on railway and landuse key values, any geometry
 
         Returns:
             bool: returns true if element is identified as rail
@@ -146,13 +146,13 @@ class OsmElement(GeometryElement):
         return any([self.tags.get('railway') in ['tram', 'rail'], self.tags.get('landuse') == 'railway'])
 
     def is_highway_polygon(self) -> bool:
-        if self.has_tag('highway'):
+        if self.has_tag_key('highway'):
             return self.is_polygon()
 
     # identify construction
     def is_construction(self) -> bool:
-        if any([self.has_tag('construction'),
-                self.has_tag('construction:highway'),
+        if any([self.has_tag_key('construction'),
+                self.has_tag_key('construction:highway'),
                 self.tags.get('landuse') == 'construction',
                 self.tags.get('highway') == 'construction',
                 self.tags.get('railway') == 'construction']):
@@ -166,7 +166,7 @@ class OsmElement(GeometryElement):
             return self.is_polygon()
 
     def is_wall_polygon(self) -> bool:
-        if self.tags.get('barrier') == 'wall' and not self.has_tag('building'):
+        if self.tags.get('barrier') == 'wall' and not self.has_tag_key('building'):
             return self.is_polygon()
 
     def is_entrance(self) -> bool:
@@ -176,7 +176,7 @@ class OsmElement(GeometryElement):
             bool: boolean value if element is identified as entrance
         """
         entrance = False
-        if self.has_tag('highway') and self.tags.get('highway') != 'motorway' and self.is_linestring():
+        if self.has_tag_key('highway') and self.tags.get('highway') != 'motorway' and self.is_linestring():
             entrance = True
         elif self.is_crossing():
             entrance = True
@@ -193,11 +193,11 @@ class OsmElement(GeometryElement):
         Notes:
             Barriers, motorways and railways (not trams) are identified as barriers.
             For all apart from landuse == railway, only LineStrings are counted because they should be set up as LineStrings.
-            If the element has a layer tag, it is not counted as barrier, because it is assumed that there is something below/above granting access through this barrier
+            If the element has a layer key, it is not counted as barrier, because it is assumed that there is something below/above granting access through this barrier
 
         """
         barrier = False
-        if self.has_tag('barrier') and self.is_linestring():
+        if self.has_tag_key('barrier') and self.is_linestring():
             barrier = True
         elif self.tags.get('highway') == 'motorway' and self.is_linestring():
             barrier = True
@@ -214,7 +214,7 @@ class OsmElement(GeometryElement):
     # identify groundlevel
     def is_non_groundlevel(self) -> bool:
         non_groundlevel = False
-        if self.has_tag('level'):
+        if self.has_tag_key('level'):
             try:
                 list(map(float, str(self.tags.get('level')).split(';')))
             except ValueError:
