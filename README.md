@@ -1,12 +1,12 @@
 # OSM Public Space Mapper
 
-*This project is a work in progress.*
+*This project is a work in progress, but is currently not developed any further.*
 
 ## Project description
 This repository includes a python script to identify and map publicly accessible space based on OpenStreetMap Data.
 I developed it as part of Master thesis in my Master program 'Urban Future' at University of Applied Sciences Potsdam.
 The underlying understanding of public space is publicly accessible and usable areas that are outdoor and urban.
-My talk at FOSSGIS 2023 can be viewed [here](https://pretalx.com/fossgis2023/talk/Y77U8A/) (in German)
+I have presented the project at [FOSSGIS](https://pretalx.com/fossgis2023/talk/Y77U8A/) (March 2023) and [FOSS4G](https://www.youtube.com/watch?v=0hkj281vjI0) (June 2023).
 
 ## Usage
 
