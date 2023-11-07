@@ -6,7 +6,11 @@
 This repository includes a python script to identify and map publicly accessible space based on OpenStreetMap Data.
 I developed it as part of Master thesis in my Master program 'Urban Future' at University of Applied Sciences Potsdam.
 The underlying understanding of public space is publicly accessible and usable areas that are outdoor and urban.
-I have presented the project at [FOSSGIS](https://pretalx.com/fossgis2023/talk/Y77U8A/) (March 2023) and [FOSS4G](https://www.youtube.com/watch?v=0hkj281vjI0) (June 2023).
+Related talks and publications include:
+- [Talk at FOSSGIS 2023: Verwendung von OSM-Daten zur Kartierung des urbanen, öffentlichen Raums](https://pretalx.com/fossgis2023/talk/Y77U8A/) and [conference proceedings](https://www.doi.org/10.5281/zenodo.7573277) (March 2023)
+- [Talk at FOSS4G 2023: A Modern Nolli Map: Using OpenStreetMap Data to Represent Urban Public Spaces](https://www.youtube.com/watch?v=0hkj281vjI0) (June 2023)
+- [Abstract from the ICA: A Contemporary Nolli Map: Using OpenStreetMap Data to Represent Urban Public Spaces ](https://ica-abs.copernicus.org/articles/6/223/2023/index.html)
+- [Full Master thesis: Kartierung von öffentlichen Räumen auf Basis von OpenStreetMap Daten](https://doi.org/10.48711/20231028-000) (Juli 2023)
 
 ## Usage
 
@@ -70,4 +74,4 @@ Many thanks for the support to my supervisors Dr. Florian Ledermann, Andrea Binn
 
 ## Contact
 
-Ester Scheck, [ester.scheck@tuwien.ac.at](mailto:ester.scheck@tuwien.ac.at)
+Ester Scheck, [ester.scheck@geo.tuwien.ac.at](mailto:ester.scheck@geo.tuwien.ac.at)
