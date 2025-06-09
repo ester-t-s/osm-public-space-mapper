@@ -9,8 +9,9 @@ The underlying understanding of public space is publicly accessible and usable a
 Related talks and publications include:
 - [Talk at FOSSGIS 2023: Verwendung von OSM-Daten zur Kartierung des urbanen, öffentlichen Raums](https://pretalx.com/fossgis2023/talk/Y77U8A/) and [conference proceedings](https://www.doi.org/10.5281/zenodo.7573277) (March 2023)
 - [Talk at FOSS4G 2023: A Modern Nolli Map: Using OpenStreetMap Data to Represent Urban Public Spaces](https://www.youtube.com/watch?v=0hkj281vjI0) (June 2023)
-- [Abstract from the ICA: A Contemporary Nolli Map: Using OpenStreetMap Data to Represent Urban Public Spaces ](https://ica-abs.copernicus.org/articles/6/223/2023/index.html)
-- [Full Master thesis: Kartierung von öffentlichen Räumen auf Basis von OpenStreetMap Daten](https://doi.org/10.48711/20231028-000) (Juli 2023)
+- [**Full Master thesis**: Kartierung von öffentlichen Räumen auf Basis von OpenStreetMap Daten](https://doi.org/10.48711/20231028-000) (Juli 2023)
+- [Abstract from the ICA: A Contemporary Nolli Map: Using OpenStreetMap Data to Represent Urban Public Spaces ](https://ica-abs.copernicus.org/articles/6/223/2023/index.html) (August 2023)
+- [Conference Paper at OSM Science 2023: Mapping public space in urban neighbourhoods using OpenStreetMap data](https://zenodo.org/records/10443403) (November 2023)
 
 ## Usage
 
